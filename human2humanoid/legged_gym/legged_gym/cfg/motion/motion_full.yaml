@@ -2,7 +2,7 @@ teleop : True
 visualize : False
 recycle_motion : True
 terrain_level_down_distance : 0.5
-num_markers : 19
+num_markers : 28
 # motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/walking_gesture.pkl'
 # motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/standing_one_gesture.pkl'
 # motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/standing.pkl'\
@@ -28,16 +28,13 @@ num_markers : 19
 # motion_file = "/hdd/zen/dev/copycat/h1_phc/data/h1/v2/singles/test.pkl"
 # motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/amass_phc_clean.pkl'
 # motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/amass_phc_clean_smooth.pkl'
-
-motion_file : 'resources/motions/h1/amass_phc_filtered.pkl'
-
-# motion_file : 'resources/motions/h1/walking_gesture_filered_12_fix.pkl'
-skeleton_file : 'resources/robots/h1/xml/h1.xml'
+motion_file : 'resources/motions/xbot/amass_recomputed.pkl'
+skeleton_file : 'resources/robots/rel2/urdf/rel2.xml'
 marker_file : 'resources/objects/Marker/traj_marker.urdf'
-num_dof_pos_reference : 19
-num_dof_vel_reference : 19
+num_dof_pos_reference : 28
+num_dof_vel_reference : 28
 
-extend_hand: True
+extend_hand: False
 extend_head: False
 
 future_tracks: False
@@ -64,11 +61,25 @@ teleop_level_down_episode_length : 30
 teleop_obs_version : 'v-teleop-extend-max'
 # teleop_obs_version : 'v-teleop-extend-max-nolinvel'
 # teleop_obs_version : 'v-min2'
-teleop_selected_keypoints_names : [ 'pelvis',  'left_hip_yaw_link', 'left_hip_roll_link','left_hip_pitch_link', 'left_knee_link', 'left_ankle_link', 'right_hip_yaw_link', 'right_hip_roll_link', 'right_hip_pitch_link', 'right_knee_link', 'right_ankle_link', 'torso_link', 'left_shoulder_pitch_link', 'left_shoulder_roll_link', 'left_shoulder_yaw_link', 'left_elbow_link',  'right_shoulder_pitch_link', 'right_shoulder_roll_link', 'right_shoulder_yaw_link', 'right_elbow_link']
+teleop_selected_keypoints_names : [
+    "waist_roll_link",
+    "left_knee_link",
+    "left_ankle_pitch_link",
+    "right_knee_link",
+    "right_ankle_pitch_link",
+    "left_shoulder_roll_link",
+    "left_arm_yaw_link",
+    # "left_hand_ee_link",
+    "right_shoulder_roll_link",
+    "right_arm_yaw_link",
+    # "right_hand_ee_link",
+    # "neck_pitch_link",
+]
+#[ 'pelvis',  'left_hip_yaw_link', 'left_hip_roll_link','left_hip_pitch_link', 'left_knee_link', 'left_ankle_link', 'right_hip_yaw_link', 'right_hip_roll_link', 'right_hip_pitch_link', 'right_knee_link', 'right_ankle_link', 'torso_link', 'left_shoulder_pitch_link', 'left_shoulder_roll_link', 'left_shoulder_yaw_link', 'left_elbow_link',  'right_shoulder_pitch_link', 'right_shoulder_roll_link', 'right_shoulder_yaw_link', 'right_elbow_link']
 
 
 resample_motions_for_envs : True
-resample_motions_for_envs_interval_s : 1000
+resample_motions_for_envs_interval_s : 200
 
 
 visualize_config:

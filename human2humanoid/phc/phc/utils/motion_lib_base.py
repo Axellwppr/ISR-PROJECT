@@ -324,6 +324,7 @@ class MotionLibBase():
 
         num_motions = self.num_motions()
         total_len = self.get_total_length()
+        breakpoint()
         print(f"Loaded {num_motions:d} motions with a total length of {total_len:.3f}s and {self.gts.shape[0]} frames.")
         return motions
 

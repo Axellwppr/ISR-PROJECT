@@ -2,17 +2,17 @@ teleop : True
 visualize : False
 recycle_motion : True
 terrain_level_down_distance : 0.5
-num_markers : 19
+num_markers : 28
 
 
 # motion_file : 'resources/motions/h1/amass_phc_filtered.pkl'
-motion_file : 'resources/motions/h1/stable_punch.pkl'
-skeleton_file : 'resources/robots/h1/xml/h1.xml'
+motion_file : 'resources/motions/xbot/amass_all.pkl'
+skeleton_file : 'resources/robots/xbot/urdf/rel2.xml'
 marker_file : 'resources/objects/Marker/traj_marker.urdf'
-num_dof_pos_reference : 19
-num_dof_vel_reference : 19
+num_dof_pos_reference : 28
+num_dof_vel_reference : 28
 
-extend_hand: True
+extend_hand: False
 extend_head: False
 
 future_tracks: False
@@ -39,11 +39,24 @@ teleop_level_down_episode_length : 30
 teleop_obs_version : 'v-teleop-extend-max'
 # teleop_obs_version : 'v-teleop-extend-max-nolinvel'
 # teleop_obs_version : 'v-min2'
-teleop_selected_keypoints_names : ['left_ankle_link', 'right_ankle_link', 'left_shoulder_pitch_link','right_shoulder_pitch_link', 'left_elbow_link', 'right_elbow_link']
+teleop_selected_keypoints_names : [
+    "waist_roll_link",
+    "left_knee_link",
+    "left_ankle_pitch_link",
+    "right_knee_link",
+    "right_ankle_pitch_link",
+    "left_shoulder_roll_link",
+    "left_arm_yaw_link",
+    # "left_hand_ee_link",
+    "right_shoulder_roll_link",
+    "right_arm_yaw_link",
+    # "right_hand_ee_link",
+    # "neck_pitch_link",
+]
 
 
 resample_motions_for_envs : True
-resample_motions_for_envs_interval_s : 1000
+resample_motions_for_envs_interval_s : 100
 
 
 visualize_config:

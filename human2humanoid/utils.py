@@ -132,3 +132,103 @@ def compute_rotation_matrix(A, B, C, D):
     #     R = torch.bmm(U_flipped, Vh)
 
     return R_initial
+
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation
+import matplotlib.animation as animation
+
+
+def plot_dynamic_points(points1, points2):
+    """
+    绘制两组点云的动态变化图
+
+    参数:
+    points1: shape为[T,N,3]的numpy数组，表示第一组点云
+    points2: shape为[T,N,3]的numpy数组，表示第二组点云
+    """
+    # 检查输入维度
+    assert points1.shape == points2.shape, "两组点云的形状必须相同"
+    assert (
+        len(points1.shape) == 3 and points1.shape[2] == 3
+    ), "输入数组必须是[T,N,3]形状"
+
+    T, N, _ = points1.shape
+
+    # 创建图形和3D坐标系
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection="3d")
+
+    # 初始化散点图对象
+    scatter1 = ax.scatter([], [], [], c="red", marker="o", label="Points 1")
+    scatter2 = ax.scatter([], [], [], c="blue", marker="o", label="Points 2")
+
+    # 计算坐标轴范围
+    x_min = min(points1[..., 0].min(), points2[..., 0].min())
+    x_max = max(points1[..., 0].max(), points2[..., 0].max())
+    y_min = min(points1[..., 1].min(), points2[..., 1].min())
+    y_max = max(points1[..., 1].max(), points2[..., 1].max())
+    z_min = min(points1[..., 2].min(), points2[..., 2].min())
+    z_max = max(points1[..., 2].max(), points2[..., 2].max())
+
+    # 设置坐标轴范围和标签
+    ax.set_xlim([x_min, x_max])
+    ax.set_ylim([y_min, y_max])
+    ax.set_zlim([z_min, z_max])
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
+    ax.legend()
+
+    # 添加交互提示
+    fig.text(
+        0.02,
+        0.98,
+        "交互提示：\n"
+        "- 左键拖动：旋转视角\n"
+        "- 右键拖动：平移视角\n"
+        "- 滚轮：缩放\n"
+        "- ESC：退出",
+        fontsize=9,
+        verticalalignment="top",
+        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+    )
+
+    # 更新函数
+    def update(frame):
+        # 更新两组点的位置
+        scatter1._offsets3d = (
+            points1[frame, :, 0],
+            points1[frame, :, 1],
+            points1[frame, :, 2],
+        )
+        scatter2._offsets3d = (
+            points2[frame, :, 0],
+            points2[frame, :, 1],
+            points2[frame, :, 2],
+        )
+
+        # 更新标题显示当前帧
+        ax.set_title(f"Frame {frame}/{T-1}")
+        return scatter1, scatter2
+
+    # 创建动画，设置repeat=True确保循环播放
+    anim = FuncAnimation(
+        fig,
+        update,
+        frames=T,
+        interval=50,  # 50ms between frames
+        blit=False,
+        repeat=True,  # 确保循环播放
+    )
+
+    # 添加交互控件
+    plt.gcf().canvas.mpl_connect(
+        "key_press_event", lambda event: plt.close() if event.key == "escape" else None
+    )
+
+    # 显示图形
+    plt.show()
+
+    return anim

@@ -144,7 +144,21 @@ if __name__ == "__main__":
     all_link_names = chain.get_link_names()
     all_joint_names = chain.get_joint_parameter_names()
     print(all_joint_names)
+    # breakpoint()
     chain.print_tree()
+
+    rotate_axis = []
+    joint_data = chain.get_joints()
+
+    for idx, joint in enumerate(joint_data):
+        if joint.joint_type == "revolute":
+            rotate_axis.append(joint.axis)
+        else:
+            print(joint.joint_type)
+
+    rotate_axis = torch.stack(rotate_axis, dim=0)
+
+    print(rotate_axis)
 
     # =========== 定义关节映射 ===========
     from link_trans import smpl_joint_pick, new_robot_joint_pick, joint_enable
@@ -165,19 +179,29 @@ if __name__ == "__main__":
         raise ValueError(f"No motion files found in {amass_root}")
 
     data_dump = {}
-    pbar = tqdm(key_name_to_pkls.keys())
-    # print(key_name_to_pkls.keys())
+    # pbar = tqdm(key_name_to_pkls.keys())
 
-    # 不使用交互模式
-    # plt.ion()  # 移除交互模式
+    filter_keys = joblib.load(
+        "/home/axell/desktop/11-30-ISR-PROJ/human2humanoid/resources/motions/h1/amass_phc_filtered.pkl"
+    ).keys()
+    pbar = tqdm(filter_keys)
 
     # 假设你要绘制的帧索引为10
     FRAME_INDEX_TO_PLOT = 20
 
+    count = 0
+
     for data_key in pbar:
+        if data_key not in key_name_to_pkls:
+            print("Not found: ", data_key)
+            continue
         amass_data = load_amass_data(key_name_to_pkls[data_key])
         if amass_data is None:
             continue
+
+        count += 1
+        if count > 20:
+            break
 
         skip = int(amass_data["fps"] // 30) if amass_data["fps"] >= 30 else 1
         trans = torch.from_numpy(amass_data["trans"][::skip]).float().to(device)
@@ -192,7 +216,7 @@ if __name__ == "__main__":
             .float()
             .to(device)
         )
-
+        # breakpoint()
         # 从SMPL获取关节位置
         verts, joints = smpl_parser_n.get_joints_verts(
             pose_aa_walk, torch.zeros((1, 10)).to(device), trans
@@ -201,14 +225,6 @@ if __name__ == "__main__":
         offset = joints[:, 0] - trans
         root_trans_offset = trans + offset
 
-        # 使用之前计算的形状参数
-        verts_opt, joints_opt = smpl_parser_n.get_joints_verts(
-            pose_aa_walk, shape_new, trans
-        )
-        # 将SMPL关节缩放
-        root_pos_opt = joints_opt[:, 0].unsqueeze(1)
-        scaled_joints_opt = (joints_opt - root_pos_opt) * scale  # + root_pos_opt
-        # 提取SMPL根部旋转(轴角)，转换为旋转矩阵
         gt_root_rot = pose_aa_walk[:, :3]  # (N,3)
         root_rot_mats_np = (
             sRot.from_rotvec(gt_root_rot.cpu().numpy())
@@ -216,8 +232,7 @@ if __name__ == "__main__":
         ).as_matrix()  # (N,3,3)
         root_rot_mats = torch.from_numpy(root_rot_mats_np).float().to(device)  # (N,3,3)
 
-        # 初始化关节角度，(1, N, M)
-
+        ### 初始化
         M = len(joint_enable)
         dof_pos_new = Variable(
             torch.zeros((1, N, M), dtype=torch.float32, device=device),
@@ -226,35 +241,28 @@ if __name__ == "__main__":
 
         optimizer_pose = torch.optim.Adadelta([dof_pos_new], lr=60)
 
+        ### 计算目标形状
+        # 使用之前计算的形状参数
+        verts_opt, joints_opt = smpl_parser_n.get_joints_verts(
+            pose_aa_walk, shape_new, trans
+        )
+        # 将SMPL关节缩放
+        root_pos_opt = joints_opt[:, 0].unsqueeze(1)
+        scaled_joints_opt = (joints_opt - root_pos_opt) * scale + root_pos_opt
+
         # 定义目标SMPL关节位置
-        target_smpl_pos = scaled_joints_opt[:, smpl_joint_pick_idx].unsqueeze(
-            0
-        )  # Shape: (1, N, len, 3)
-        y_vec = (
-            target_smpl_pos[0, :, 5, :] - target_smpl_pos[0, :, 8, :]
-        )  # 左右肩膀定义的Y轴
-        x_vec = target_smpl_pos[0, :, -1, :] - target_smpl_pos[0, :, 0, :]
-        # y_vec_xbot = x_vec_xbot = torch.matmul(
-        #     root_rot_mats,
-        #     torch.tensor([0, 1, 0], dtype=torch.float32, device=device)
-        #     .repeat(N, 1)
-        #     .unsqueeze(-1),
-        # ).squeeze(-1)
-        # x_vec_xbot = torch.matmul(
-        #     root_rot_mats,
-        #     torch.tensor([0, 0, 1], dtype=torch.float32, device=device)
-        #     .repeat(N, 1)
-        #     .unsqueeze(-1),
-        # ).squeeze(-1)
+        target_smpl_pos = scaled_joints_opt[
+            :, smpl_joint_pick_idx
+        ]  # Shape: (N, len, 3)
+        y_vec = target_smpl_pos[:, 5, :] - target_smpl_pos[:, 8, :]  # 左右肩膀定义的Y轴
+        x_vec = target_smpl_pos[:, -1, :] - target_smpl_pos[:, 0, :]
 
         diff_max = float("inf")
         best_loss = float("inf")
         best_dof = None
         for iteration in range(500):
             joint_value = torch.zeros((N, len(all_joint_names)), dtype=torch.float32)
-            # 批量提取所有角度 (N, M)
             joint_value[:, joint_enable_idx] = dof_pos_new[0]  # Shape: (N, M)
-
             # 批量前向计算机器人FK
             transforms = chain.forward_kinematics(joint_value)
 
@@ -272,15 +280,15 @@ if __name__ == "__main__":
             waist_rot = transforms["waist_yaw_link"].get_matrix()[:, :3, :3]
             rel_rot = torch.matmul(root_rot_mats, torch.linalg.inv(waist_rot))
             # rel_rot = torch.matmul(head_rot, rel_rot)
-            robot_positions_world = (
-                torch.matmul(rel_rot, robot_positions).transpose(1, 2).unsqueeze(0)
+            robot_positions_world = torch.matmul(rel_rot, robot_positions).transpose(
+                1, 2
             )
 
             y_vec_xbot = (
-                robot_positions_world[0, :, 5, :] - robot_positions_world[0, :, 8, :]
+                robot_positions_world[:, 5, :] - robot_positions_world[:, 8, :]
             )  # 左右肩膀定义的Y轴
             x_vec_xbot = (
-                robot_positions_world[0, :, -1, :] - robot_positions_world[0, :, 0, :]
+                robot_positions_world[:, -1, :] - robot_positions_world[:, 0, :]
             )
 
             head_rot = compute_rotation_matrix(x_vec_xbot, y_vec_xbot, x_vec, y_vec)
@@ -288,7 +296,8 @@ if __name__ == "__main__":
             # breakpoint()
             rel_rot = torch.matmul(head_rot, root_rot_mats)
             robot_positions_world = (
-                torch.matmul(rel_rot, robot_positions).transpose(1, 2).unsqueeze(0)
+                torch.matmul(root_rot_mats, robot_positions).transpose(1, 2)
+                + root_pos_opt
             )
 
             # 计算差异
@@ -310,51 +319,62 @@ if __name__ == "__main__":
             loss.backward()
             optimizer_pose.step()
 
-            # # 每20次迭代绘制一次图形，并暂停优化直到窗口关闭
-            # if iteration % 100 == 0:
-            #     if N > FRAME_INDEX_TO_PLOT:
-            #         frame_idx = FRAME_INDEX_TO_PLOT
+            # 每20次迭代绘制一次图形，并暂停优化直到窗口关闭
+            if iteration % 100 == 0:
+                if N > FRAME_INDEX_TO_PLOT:
+                    frame_idx = FRAME_INDEX_TO_PLOT
 
-            #         robot_pos_frame = (
-            #             robot_positions_world[0, frame_idx].detach().cpu().numpy()
-            #         )  # (len, 3)
-            #         smpl_pos_frame = (
-            #             target_smpl_pos[0, frame_idx].detach().cpu().numpy()
-            #         )  # (len, 3)
+                    robot_pos_frame = (
+                        robot_positions_world[frame_idx].detach().cpu().numpy()
+                    )  # (len, 3)
+                    smpl_pos_frame = (
+                        target_smpl_pos[frame_idx].detach().cpu().numpy()
+                    )  # (len, 3)
 
-            #         print(f"Iteration {iteration}: Plotting frame {frame_idx}")
+                    print(f"Iteration {iteration}: Plotting frame {frame_idx}")
 
-            #         # 绘制并阻塞
-            #         plot_frame(
-            #             robot_pos_frame,
-            #             smpl_pos_frame,
-            #             iteration,
-            #             frame_idx,
-            #             x_vec[FRAME_INDEX_TO_PLOT].detach().cpu().numpy(),
-            #         )
+                    # 绘制并阻塞
+                    plot_frame(
+                        robot_pos_frame,
+                        smpl_pos_frame,
+                        iteration,
+                        frame_idx,
+                        x_vec[FRAME_INDEX_TO_PLOT].detach().cpu().numpy(),
+                    )
 
-        # 优化结束后，保存数据
-        # root_trans_offset_dump = root_trans_offset.clone()
-        # z_min_robot = robot_positions_world[0, :, :, 2].min().item()
-        # root_trans_offset_dump[..., 2] -= z_min_robot - 0.08
-
-        if diff_max > 0.15:
+        if diff_max > 0.3:
             print(f"Max Diff: {diff_max}, Skip {data_key}")
             continue
 
-        if best_loss > 0.05:
+        if best_loss > 0.08:
             print(f"Loss: {best_loss}, Skip {data_key}")
             continue
 
-        gt_root_rot = pose_aa_walk[:, :3]  # SMPL根关节旋转轴角
-        root_rot_quat = sRot.from_rotvec(gt_root_rot.cpu().numpy()).as_quat()
+        # 优化结束后，保存数据
+        root_rot_quat = sRot.from_matrix(rel_rot.detach().cpu().numpy()).as_quat()
 
+        root_trans_offset_dump = root_pos_opt.squeeze(1).clone()
+        z_min_robot = robot_positions_world[:, :, 2].min().item()
+        root_trans_offset_dump[..., 2] -= z_min_robot - 0.06
+
+        best_joint_value = torch.zeros((N, len(all_joint_names)), dtype=torch.float32)
+        best_joint_value[:, joint_enable_idx] = dof_pos_new[0]
+
+        # breakpoint()
+        best_pose_aa = torch.cat(
+            [
+                torch.from_numpy(
+                    sRot.from_matrix(root_rot_mats.detach().cpu().numpy()).as_rotvec()
+                ).unsqueeze(1),
+                rotate_axis.unsqueeze(0) * best_joint_value.unsqueeze(-1),
+            ],
+            axis=1,
+        )
+        # breakpoint()
         data_dump[data_key] = {
-            # "root_trans_offset": root_trans_offset_dump.squeeze()
-            # .cpu()
-            # .detach()
-            # .numpy(),
-            "dof": best_dof.squeeze().detach().cpu().numpy(),
+            "root_trans_offset": root_trans_offset_dump.cpu().detach().numpy(),
+            "dof": best_joint_value.detach().cpu().numpy(),
+            "pose_aa": best_pose_aa.cpu().detach().numpy(),
             "root_rot": root_rot_quat,
             "fps": 30,
         }
@@ -371,5 +391,3 @@ if __name__ == "__main__":
     # import ipdb
     # ipdb.set_trace()
     joblib.dump(data_dump, "data/new_robot/amass_all.pkl")
-
-    # 不需要关闭绘图，因为每次绘图都是独立的

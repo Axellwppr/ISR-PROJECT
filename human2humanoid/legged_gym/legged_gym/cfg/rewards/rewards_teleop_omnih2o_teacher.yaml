@@ -21,60 +21,7 @@ scales:
   orientation : -200.0
   feet_height : -0
   feet_max_height_for_this_air : -2500
-  
-
-
-  # torques : 0
-  # torque_limits : 0
-  # dof_acc : 0 #-8.4e-6   -4.2e-7 #-3.5e-8
-  # dof_vel : 0 # -0.003
-  # # action_rate : -0.6 # -0.6  # -0.3 # -0.3 -0.12 -0.01
-  # lower_action_rate : 0 # -0.6  # -0.3 # -0.3 -0.12 -0.01
-  # upper_action_rate : 0 # -0.6  # -0.3 # -0.3 -0.12 -0.01
-  # dof_pos_limits : 0
-  # termination : -200*1.25
-  # feet_contact_forces : 0
-  # stumble : 0
-  # feet_air_time_teleop : 0
-  # slippage : -0
-  # feet_ori : 0 = python legged_gym/scripts/train_hydra.py --config-name=config_teleop task=h1:teleop run_name=3pointvr_upperrewardonly_sigma_curriculum0.01-1penalty_curriculum0.25-1 env.num_observations=93 env.num_privileged_obs=170 motion.teleop_obs_version=v-teleop-extend-vr-max motion.teleop_selected_keypoints_names=[] motion.extend_head=True num_envs=4096 asset.zero_out_far=False asset.termination_scales.max_ref_motion_distance=10.0 sim_device=cuda:0 rewards.sigma_curriculum=True rewards.penalty_curriculum=Truereward
-  # orientation : -0.0
-
-
-  # # teleop task rewards
-  # teleop_joint_position_lower : 32 # 5.0
-  # teleop_joint_position_upper : 32 # 5.0
-  # teleop_joint_vel_lower : 16  # 5.
-  # teleop_joint_vel_upper : 16  # 5.
-  # teleop_body_position_extend_lower : 40 * 1.4 # 8 keypoint
-  # teleop_body_position_extend_upper : 40 * 1.4 # 8 keypoint
-  # teleop_body_position_vr_3keypoints : 60 * 1.4 # 8 keypoint
-  # teleop_body_rotation_lower : 20
-  # teleop_body_rotation_upper : 20
-  # teleop_body_vel_lower : 8
-  # teleop_body_vel_upper : 8 
-  # teleop_body_ang_vel_lower: 8 
-  # teleop_body_ang_vel_upper: 8 
-
-  # ============================= 0421 version rewards
   closing: 0
-  # teleop upper only
-  # teleop_joint_position_lower : 0 # 5.0
-  # teleop_joint_position_upper : 32  # 5.0
-  # teleop_joint_vel_lower : 0  # 5.
-  # teleop_joint_vel_upper : 16  # 5.
-  # teleop_body_position_extend_lower : 0 # 8 keypoint
-  # teleop_body_position_extend_upper : 0 # 8 keypoint
-  # teleop_body_position_extend_upper_0dot5sigma : 40 # 8 keypoint
-  # teleop_body_position_vr_3keypoints : 0 # 8 keypoint
-  # teleop_body_rotation_lower : 0
-  # teleop_body_rotation_upper : 20
-  # teleop_body_vel_lower : 0
-  # teleop_body_vel_upper : 8
-  # teleop_body_ang_vel_lower: 0 
-  # teleop_body_ang_vel_upper: 8 
-
-  # ============================= 0406 version rewards (all whole body rewards)
   teleop_selected_joint_position : 32 # 5.0
   teleop_selected_joint_vel : 16 # 5.
   teleop_body_position : 0.0 # 6 keypoint
@@ -136,32 +83,56 @@ teleop_body_vel_sigma : 10 # 10 -> 5
 teleop_body_ang_vel_sigma : 10 # 10 -> 5
 
 
-teleop_body_rot_selection : ['pelvis']
-teleop_body_vel_selection : ['pelvis']
-teleop_body_pos_selection : ['pelvis']
-teleop_body_ang_vel_selection : ['pelvis']
+teleop_body_rot_selection : ['waist_roll_link']
+teleop_body_vel_selection : ['waist_roll_link']
+teleop_body_pos_selection : ['waist_roll_link']
+teleop_body_ang_vel_selection : ['waist_roll_link']
 teleop_joint_pos_selection : 
   # upper body
-  torso_joint: 2.0
+  waist_yaw_joint: 2.0
+  waist_roll_joint: 2.0
   left_shoulder_pitch_joint: 2.0
   left_shoulder_roll_joint: 2.0
-  left_shoulder_yaw_joint: 2.0
-  left_elbow_joint: 2.0
+  left_arm_yaw_joint: 2.0
+  left_elbow_pitch_joint: 2.0
+  left_wrist_roll_joint: 2.0
   right_shoulder_pitch_joint: 2.0
   right_shoulder_roll_joint: 2.0
-  right_shoulder_yaw_joint: 2.0
-  right_elbow_joint: 2.0
+  right_arm_yaw_joint: 2.0
+  right_elbow_pitch_joint: 2.0
+  right_wrist_roll_joint: 2.0
   # lower body
-  left_hip_pitch_joint: 2.0
-  left_hip_roll_joint: 0.5
-  left_hip_yaw_joint: 0.5
+  left_leg_pitch_joint: 2.0
+  left_leg_roll_joint: 0.5
+  # left_hip_yaw_joint: 0.5
   left_knee_joint: 0.5
-  left_ankle_joint: 0.5
-  right_hip_pitch_joint: 2.0
-  right_hip_roll_joint: 0.5
-  right_hip_yaw_joint: 0.5
+  # left_ankle_joint: 0.5
+  right_leg_pitch_joint: 2.0
+  right_leg_roll_joint: 0.5
+  # right_hip_yaw_joint: 0.5
   right_knee_joint: 0.5
-  right_ankle_joint: 0.5
+  # right_ankle_joint: 0.5
+#   # upper body
+#   torso_joint: 2.0
+#   left_shoulder_pitch_joint: 2.0
+#   left_shoulder_roll_joint: 2.0
+#   left_shoulder_yaw_joint: 2.0
+#   left_elbow_joint: 2.0
+#   right_shoulder_pitch_joint: 2.0
+#   right_shoulder_roll_joint: 2.0
+#   right_shoulder_yaw_joint: 2.0
+#   right_elbow_joint: 2.0
+#   # lower body
+#   left_hip_pitch_joint: 2.0
+#   left_hip_roll_joint: 0.5
+#   left_hip_yaw_joint: 0.5
+#   left_knee_joint: 0.5
+#   left_ankle_joint: 0.5
+#   right_hip_pitch_joint: 2.0
+#   right_hip_roll_joint: 0.5
+#   right_hip_yaw_joint: 0.5
+#   right_knee_joint: 0.5
+#   right_ankle_joint: 0.5
 
 # curriculum: False
 sigma_curriculum: False
@@ -186,7 +157,7 @@ penalty_reward_names : [  "torques",
   "lower_action_rate",
   "upper_action_rate",
   "dof_pos_limits",
-  "termination",
+  # "termination",
   "feet_contact_forces",
   "stumble",
   "feet_air_time_teleop",

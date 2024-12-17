@@ -38,7 +38,6 @@ class LeggedRobotCfg(BaseConfig):
         # trimesh only:
         slope_treshold = 0.75 # slopes above this threshold will be corrected to vertical surfaces
 
-
     class commands:
         curriculum = False
         max_curriculum = 1.
@@ -77,14 +76,14 @@ class LeggedRobotCfg(BaseConfig):
         penalize_contacts_on = []
         terminate_after_contacts_on = []
         disable_gravity = False
-        collapse_fixed_joints = True # merge bodies connected by fixed joints. Specific fixed joints can be kept by adding " <... dont_collapse="true">
+        collapse_fixed_joints = False  # merge bodies connected by fixed joints. Specific fixed joints can be kept by adding " <... dont_collapse="true">
         fix_base_link = False # fixe the base of the robot
         # default_dof_drive_mode = 3 # see GymDofDriveModeFlags (0 is none, 1 is pos tgt, 2 is vel tgt, 3 effort)
-        default_dof_drive_mode = 1 # see GymDofDriveModeFlags (0 is none, 1 is pos tgt, 2 is vel tgt, 3 effort)
+        default_dof_drive_mode = 3  # see GymDofDriveModeFlags (0 is none, 1 is pos tgt, 2 is vel tgt, 3 effort)
         self_collisions = 1 # 1 to disable, 0 to enable...bitwise filter
         replace_cylinder_with_capsule = True # replace collision cylinders with capsules, leads to faster/more stable simulation
         flip_visual_attachments = True # Some .obj meshes must be flipped from y-up to z-up
-        
+
         density = 0.001
         angular_damping = 0.
         linear_damping = 0.
@@ -92,27 +91,24 @@ class LeggedRobotCfg(BaseConfig):
         max_linear_velocity = 1000.
         armature = 0.
         thickness = 0.01
-        
+
         terminate_by_knee_distance = False
         terminate_by_low_height = False
         terminate_by_lin_vel = False
         terminate_by_ang_vel = False
         terminate_by_gravity = False
         terminate_by_low_height = False
-        
+
         terminate_by_ref_motion_distance = False
         terminate_by_1time_motion = False
-        
-        
-        
+
         class termination_scales():
             base_height = 0.3
             base_vel = 10.0
             base_ang_vel = 5.0
             gravity_x = 0.7
             gravity_y = 0.7
-            min_knee_distance = 0.
-            
+            min_knee_distance = 0.0
 
     class domain_rand:
         randomize_base_com = False
@@ -142,14 +138,10 @@ class LeggedRobotCfg(BaseConfig):
 
         randomize_rfi_lim = True
         rfi_lim_range = [0.5, 1.5]
-        
+
         randomize_ctrl_delay = False
         ctrl_delay_step_range = [0, 4] # integer max real delay is 90ms
-        
-        
-        
-        
-    
+
     class rewards:
         class scales:
             termination = -0.0
@@ -194,8 +186,7 @@ class LeggedRobotCfg(BaseConfig):
         teleop_body_vel_selection = ['pelvis']
         teleop_body_pos_selection = ['pelvis']
         teleop_body_ang_vel_selection = ['pelvis']
-        
-        
+
     class normalization:
         class obs_scales:
             lin_vel = 2.0
@@ -249,14 +240,14 @@ class LeggedRobotCfg(BaseConfig):
 
         class physx:
             num_threads = 4
-            solver_type = 1  # 0: pgs, 1: tgs
-            num_position_iterations = 4
-            num_velocity_iterations = 0
+            solver_type = 0  # 0: pgs, 1: tgs
+            num_position_iterations = 16
+            num_velocity_iterations = 4
             contact_offset = 0.02  # [m]
             rest_offset = 0.0   # [m]
             bounce_threshold_velocity = 0.2 #0.5 [m/s]
             max_depenetration_velocity = 10
-            max_gpu_contact_pairs = 2**24 #  -> needed for 8000 envs and more
+            max_gpu_contact_pairs = 4 * 2**24  #  -> needed for 8000 envs and more
             default_buffer_size_multiplier = 10
             contact_collection = 2 # 0: never, 1: last sub-step, 2: all sub-steps (default=2)
 
@@ -276,9 +267,9 @@ class LeggedRobotCfg(BaseConfig):
         curriculum = False
         teleop_level_up_episode_length = 100
         teleop_level_down_episode_length = 50
-        
+
         class visualize_config:
-            customize_color = True
+            customize_color = False
             marker_joint_colors = [
                 # ['left_hip_yaw_joint', 'left_hip_roll_joint', 'left_hip_pitch_joint', 'left_knee_joint', 'left_ankle_joint', 'right_hip_yaw_joint', 'right_hip_roll_joint', 'right_hip_pitch_joint', 'right_knee_joint', 'right_ankle_joint', 'torso_joint', 'left_shoulder_pitch_joint', 'left_shoulder_roll_joint', 'left_shoulder_yaw_joint', 'left_elbow_joint', 'right_shoulder_pitch_joint', 'right_shoulder_roll_joint', 'right_shoulder_yaw_joint', 'right_elbow_joint']
                 (0.157, 0.231, 0.361), # pelvis
@@ -304,7 +295,7 @@ class LeggedRobotCfg(BaseConfig):
                 (1, 0.651, 0), # right_elbow_joint_extend
                 (1, 0.651, 0), # left_elbow_joint_extend
             ]
-        
+
 
 class LeggedRobotCfgPPO(BaseConfig):
     seed = 1
@@ -318,7 +309,7 @@ class LeggedRobotCfgPPO(BaseConfig):
         # rnn_type = 'lstm'
         # rnn_hidden_size = 512
         # rnn_num_layers = 1
-        
+
     class algorithm:
         # training params
         value_loss_coef = 1.0
@@ -349,5 +340,4 @@ class LeggedRobotCfgPPO(BaseConfig):
         resume = False
         load_run = -1 # -1 = last run
         checkpoint = -1 # -1 = last saved model
-        resume_path = None # updated from load_run and chkpt
-        
+        resume_path = None  # updated from load_run and chkpt

@@ -39,8 +39,12 @@ H1_ROTATION_AXIS = torch.tensor([[
 
 class Humanoid_Batch:
 
-    def __init__(self, mjcf_file = f"resources/robots/h1/h1.xml", extend_hand = True, extend_head = False, device = torch.device("cpu")):
+    def __init__(self, mjcf_file = f"resources/robots/h1/h1.xml", extend_hand = False, extend_head = False, device = torch.device("cpu")):
         self.mjcf_data = mjcf_data = self.from_mjcf(mjcf_file)
+        print(extend_hand, extend_head)
+        assert  not (extend_hand or extend_head), "You should not extend either hand or head"
+        extend_hand = False
+        extend_head = False
         self.extend_hand = extend_hand
         self.extend_head = extend_head
         if extend_hand:
@@ -55,7 +59,7 @@ class Humanoid_Batch:
             self.model_names = mjcf_data['node_names']
             self._offsets = mjcf_data['local_translation'][None, ].to(device)
             self._local_rotation = mjcf_data['local_rotation'][None, ].to(device)
-            
+
         if extend_head:
             self._remove_idx = 3
             self.model_names = self.model_names + ["head_link"]
@@ -63,25 +67,24 @@ class Humanoid_Batch:
             head_length = 0.75
             self._offsets = torch.cat((self._offsets, torch.tensor([[[0, 0, head_length]]]).to(device)), dim = 1).to(device)
             self._local_rotation = torch.cat((self._local_rotation, torch.tensor([[[1, 0, 0, 0]]]).to(device)), dim = 1).to(device)
-            
-        
+
         self.joints_range = mjcf_data['joints_range'].to(device)
         self._local_rotation_mat = tRot.quaternion_to_matrix(self._local_rotation).float() # w, x, y ,z
-        
+
     def from_mjcf(self, path):
-        # function from Poselib: 
+        # function from Poselib:
         tree = ETree.parse(path)
         xml_doc_root = tree.getroot()
         xml_world_body = xml_doc_root.find("worldbody")
         if xml_world_body is None:
             raise ValueError("MJCF parsed incorrectly please verify it.")
         # assume this is the root
-        xml_body_root = xml_world_body.find("body")
+        xml_body_root = xml_world_body
         if xml_body_root is None:
             raise ValueError("MJCF parsed incorrectly please verify it.")
-            
+
         xml_joint_root = xml_body_root.find("joint")
-        
+
         node_names = []
         parent_indices = []
         local_translation = []
@@ -91,6 +94,8 @@ class Humanoid_Batch:
         # recursively adding all nodes into the skel_tree
         def _add_xml_node(xml_node, parent_index, node_index):
             node_name = xml_node.attrib.get("name")
+
+            # print(node_name, ":", xml_node.children)
             # parse the local translation into float list
             pos = np.fromstring(xml_node.attrib.get("pos", "0 0 0"), dtype=float, sep=" ")
             quat = np.fromstring(xml_node.attrib.get("quat", "1 0 0 0"), dtype=float, sep=" ")
@@ -104,11 +109,11 @@ class Humanoid_Batch:
             for joint in all_joints:
                 if not joint.attrib.get("range") is None: 
                     joints_range.append(np.fromstring(joint.attrib.get("range"), dtype=float, sep=" "))
-            
+
             for next_node in xml_node.findall("body"):
                 node_index = _add_xml_node(next_node, curr_index, node_index)
             return node_index
-        
+        # breakpoint()
         _add_xml_node(xml_body_root, -1, 0)
         return {
             "node_names": node_names,
@@ -118,7 +123,6 @@ class Humanoid_Batch:
             "joints_range": torch.from_numpy(np.array(joints_range))
         }
 
-        
     def fk_batch(self, pose, trans, convert_to_mat=True, return_full = False, dt=1/30):
         device, dtype = pose.device, pose.dtype
         pose_input = pose.clone()
@@ -135,30 +139,29 @@ class Humanoid_Batch:
         if pose_mat.shape != 5:
             pose_mat = pose_mat.reshape(B, seq_len, -1, 3, 3)
         J = pose_mat.shape[2] - 1  # Exclude root
-        
+
         wbody_pos, wbody_mat = self.forward_kinematics_batch(pose_mat[:, :, 1:], pose_mat[:, :, 0:1], trans)
-        
+
         return_dict = EasyDict()
-        
-        
+
         wbody_rot = tRot.wxyz_to_xyzw(tRot.matrix_to_quaternion(wbody_mat))
         if self.extend_hand:
             if return_full:
                 return_dict.global_velocity_extend = self._compute_velocity(wbody_pos, dt) 
                 return_dict.global_angular_velocity_extend = self._compute_angular_velocity(wbody_rot, dt)
-                
+
             return_dict.global_translation_extend = wbody_pos.clone()
             return_dict.global_rotation_mat_extend = wbody_mat.clone()
             return_dict.global_rotation_extend = wbody_rot
-            
+
             wbody_pos = wbody_pos[..., :-self._remove_idx, :]
             wbody_mat = wbody_mat[..., :-self._remove_idx, :, :]
             wbody_rot = wbody_rot[..., :-self._remove_idx, :]
-        
+
         return_dict.global_translation = wbody_pos
         return_dict.global_rotation_mat = wbody_mat
         return_dict.global_rotation = wbody_rot
-            
+
         if return_full:
             rigidbody_linear_velocity = self._compute_velocity(wbody_pos, dt)  # Isaac gym is [x, y, z, w]. All the previous functions are [w, x, y, z]
             rigidbody_angular_velocity = self._compute_angular_velocity(wbody_rot, dt)
@@ -167,18 +170,17 @@ class Humanoid_Batch:
             return_dict.global_root_angular_velocity = rigidbody_angular_velocity[..., 0, :]
             return_dict.global_angular_velocity = rigidbody_angular_velocity
             return_dict.global_velocity = rigidbody_linear_velocity
-            
+
             if self.extend_hand or self.extend_head:
                 return_dict.dof_pos = pose.sum(dim = -1)[..., 1:][..., :-self._remove_idx] # you can sum it up since unitree's each joint has 1 dof. Last two are for hands. doesn't really matter. 
             else:
                 return_dict.dof_pos = pose.sum(dim = -1)[..., 1:] # you can sum it up since unitree's each joint has 1 dof. Last two are for hands. doesn't really matter. 
-            
+
             dof_vel = ((return_dict.dof_pos[:, 1:] - return_dict.dof_pos[:, :-1] )/dt)
             return_dict.dof_vels = torch.cat([dof_vel, dof_vel[:, -2:-1]], dim = 1)
             return_dict.fps = int(1/dt)
-        
+
         return return_dict
-    
 
     def forward_kinematics_batch(self, rotations, root_rotations, root_positions):
         """
@@ -188,7 +190,10 @@ class Humanoid_Batch:
          -- root_positions: (B, 3) tensor describing the root joint positions.
         Output: joint positions (B, J, 3)
         """
-        
+        # breakpoint()
+        rotations = rotations.to(torch.float32)
+        root_positions = root_positions.to(torch.float32)
+        root_rotations = root_rotations.to(torch.float32)
         device, dtype = root_rotations.device, root_rotations.dtype
         B, seq_len = rotations.size()[0:2]
         J = self._offsets.shape[1]
@@ -203,18 +208,19 @@ class Humanoid_Batch:
                 positions_world.append(root_positions)
                 rotations_world.append(root_rotations)
             else:
+                # breakpoint()
                 jpos = (torch.matmul(rotations_world[self._parents[i]][:, :, 0], expanded_offsets[:, :, i, :, None]).squeeze(-1) + positions_world[self._parents[i]])
                 rot_mat = torch.matmul(rotations_world[self._parents[i]], torch.matmul(self._local_rotation_mat[:,  (i):(i + 1)], rotations[:, :, (i - 1):i, :]))
                 # rot_mat = torch.matmul(rotations_world[self._parents[i]], rotations[:, :, (i - 1):i, :])
                 # print(rotations[:, :, (i - 1):i, :].shape, self._local_rotation_mat.shape)
-                
+
                 positions_world.append(jpos)
                 rotations_world.append(rot_mat)
-        
+
         positions_world = torch.stack(positions_world, dim=2)
         rotations_world = torch.cat(rotations_world, dim=2)
         return positions_world, rotations_world
-    
+
     @staticmethod
     def _compute_velocity(p, time_delta, guassian_filter=True):
         velocity = np.gradient(p.numpy(), axis=-3) / time_delta
@@ -222,9 +228,9 @@ class Humanoid_Batch:
             velocity = torch.from_numpy(filters.gaussian_filter1d(velocity, 2, axis=-3, mode="nearest")).to(p)
         else:
             velocity = torch.from_numpy(velocity).to(p)
-        
+
         return velocity
-    
+
     @staticmethod
     def _compute_angular_velocity(r, time_delta: float, guassian_filter=True):
         # assume the second last dimension is the time axis
