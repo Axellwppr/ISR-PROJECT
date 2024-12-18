@@ -487,6 +487,7 @@ class MotionLibBase():
         
 
         if "dof_pos" in self.__dict__: # H1 joints
+            breakpoint
             dof_vel = (1.0 - blend) * dof_vel0 + blend * dof_vel1
             dof_pos = (1.0 - blend) * local_rot0 + blend * local_rot1
         else:

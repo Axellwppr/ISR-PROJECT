@@ -57,7 +57,7 @@ def process_chunk(
     new_robot_joint_pick_idx,
     root_rot_inv_mat,
     all_joint_names,
-    max_diff_threshold=0.3,
+    max_diff_threshold=0.5,
     loss_threshold=0.08,
     device=torch.device("cpu"),
     joint_min=None,
@@ -95,7 +95,7 @@ def process_chunk(
     )
     optimizer_pose = torch.optim.Adadelta([dof_pos_new], lr=100)
 
-    max_iters = 1800
+    max_iters = 800
     best_loss = float("inf")
     best_dof = None
     best_robot_positions_world = None
@@ -167,10 +167,10 @@ def process_chunk(
         #     best_diff = diff.detach().clone()
         #     best_head_rot = head_rot.detach().clone()
 
-    plot_dynamic_points(
-        robot_positions_world.detach().cpu().numpy(),
-        target_smpl_pos.detach().cpu().numpy(),
-    )
+    # plot_dynamic_points(
+    #     robot_positions_world.detach().cpu().numpy(),
+    #     target_smpl_pos.detach().cpu().numpy(),
+    # )
 
     best_dof = dof_pos_new.detach().clone()
     best_robot_positions_world = robot_positions_world.detach().clone()
@@ -356,7 +356,7 @@ if __name__ == "__main__":
 
         # 增量式保存
         flush_count += 1
-        if flush_count % 100 == 0:
+        if flush_count % 50 == 0:
             incremental_file = args.incremental_save.replace(
                 ".pkl", f"_{flush_count}.pkl"
             )
@@ -367,6 +367,7 @@ if __name__ == "__main__":
     # 按顺序将序列加入chunk
     pbar = tqdm(valid_keys, desc="Loading and chunking data")
     for data_key in pbar:
+        # data_key = "0-KIT_424_parkour08_poses"
         amass_data = load_amass_data(key_name_to_pkls[data_key])
         if amass_data is None:
             continue

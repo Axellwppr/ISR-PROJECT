@@ -1,14 +1,12 @@
 scales:
-  # regularization penalty
   torques : -0.0001
   torque_limits : -2.
   dof_acc : -0.000011 #-8.4e-6   -4.2e-7 #-3.5e-8
   dof_vel : -0.004 # -0.003
-  # action_rate : -0.6 # -0.6  # -0.3 # -0.3 -0.12 -0.01
   lower_action_rate : -3.0 # -1.35 # -0.6  # -0.3 # -0.3 -0.12 -0.01
   upper_action_rate : -0.625 # 0.0625 # -0.6  # -0.3 # -0.3 -0.12 -0.01
   dof_pos_limits : -100.0*1.25
-  dof_vel_limits : -50.
+  dof_vel_limits : -20.
   termination : -200*1.25
   feet_contact_forces : -0.75 # 0.125
   stumble : -1000.0*1.25
@@ -22,16 +20,17 @@ scales:
   feet_height : -0
   feet_max_height_for_this_air : -2500
   closing: 0
-  teleop_selected_joint_position : 32 # 5.0
+  teleop_selected_joint_position : 160 # 5.0
   teleop_selected_joint_vel : 16 # 5.
   teleop_body_position : 0.0 # 6 keypoint
-  teleop_body_position_extend :  30 # wholebody
+  teleop_body_position_extend :  160 # wholebody
   teleop_body_position_extend_small_sigma : 0.0 # wholebody
   teleop_body_position_extend_upper: 0
-  teleop_body_position_vr_3keypoints : 50 # 8 keypoint
+  teleop_body_position_vr_3keypoints : 120 # 8 keypoint
   teleop_body_rotation : 20.0
   teleop_body_vel : 8.0
   teleop_body_ang_vel : 8.0
+  alive: 100
   
 
   # teleop_selected_joint_position : 32 # 5.0
@@ -141,13 +140,13 @@ teleop_body_pos_upperbody_sigma_range: [0.02, 1.0]
 reward_position_sigma_level_up_threshold: 50
 reward_position_sigma_level_down_threshold: 120
 
-penalty_curriculum: False
-penalty_scale : 1.0
+penalty_curriculum: True
+penalty_scale : 0.3
 penalty_scale_range: [0.25, 1.0]
 penalty_level_down_threshold: 50
 penalty_level_up_threshold: 120
 
-level_degree: 0.00001
+level_degree: 0.01
 
 penalty_reward_names : [  "torques",
   "torque_limits",
@@ -157,7 +156,7 @@ penalty_reward_names : [  "torques",
   "lower_action_rate",
   "upper_action_rate",
   "dof_pos_limits",
-  # "termination",
+  "termination",
   "feet_contact_forces",
   "stumble",
   "feet_air_time_teleop",

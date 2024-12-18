@@ -79,7 +79,7 @@ class Humanoid_Batch:
         if xml_world_body is None:
             raise ValueError("MJCF parsed incorrectly please verify it.")
         # assume this is the root
-        xml_body_root = xml_world_body
+        xml_body_root = xml_world_body.find("body")
         if xml_body_root is None:
             raise ValueError("MJCF parsed incorrectly please verify it.")
 
@@ -115,6 +115,7 @@ class Humanoid_Batch:
             return node_index
         # breakpoint()
         _add_xml_node(xml_body_root, -1, 0)
+        # breakpoint()
         return {
             "node_names": node_names,
             "parent_indices": torch.from_numpy(np.array(parent_indices, dtype=np.int32)),
@@ -123,7 +124,7 @@ class Humanoid_Batch:
             "joints_range": torch.from_numpy(np.array(joints_range))
         }
 
-    def fk_batch(self, pose, trans, convert_to_mat=True, return_full = False, dt=1/30):
+    def fk_batch(self, pose, trans, convert_to_mat=True, return_full = False, dt=1/30, dof_gt = None):
         device, dtype = pose.device, pose.dtype
         pose_input = pose.clone()
         B, seq_len = pose.shape[:2]
@@ -171,10 +172,15 @@ class Humanoid_Batch:
             return_dict.global_angular_velocity = rigidbody_angular_velocity
             return_dict.global_velocity = rigidbody_linear_velocity
 
-            if self.extend_hand or self.extend_head:
-                return_dict.dof_pos = pose.sum(dim = -1)[..., 1:][..., :-self._remove_idx] # you can sum it up since unitree's each joint has 1 dof. Last two are for hands. doesn't really matter. 
+            if dof_gt is not None:
+                dof_gt = torch.from_numpy(dof_gt).to(device).to(dtype)
+                return_dict.dof_pos = dof_gt
             else:
-                return_dict.dof_pos = pose.sum(dim = -1)[..., 1:] # you can sum it up since unitree's each joint has 1 dof. Last two are for hands. doesn't really matter. 
+                print("Warning: No ground truth provided for dof, calc from the input")
+                if self.extend_hand or self.extend_head:
+                    return_dict.dof_pos = pose.sum(dim = -1)[..., 1:][..., :-self._remove_idx] # you can sum it up since unitree's each joint has 1 dof. Last two are for hands. doesn't really matter. 
+                else:
+                    return_dict.dof_pos = pose.sum(dim = -1)[..., 1:] # you can sum it up since unitree's each joint has 1 dof. Last two are for hands. doesn't really matter. 
 
             dof_vel = ((return_dict.dof_pos[:, 1:] - return_dict.dof_pos[:, :-1] )/dt)
             return_dict.dof_vels = torch.cat([dof_vel, dof_vel[:, -2:-1]], dim = 1)

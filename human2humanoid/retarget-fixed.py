@@ -106,7 +106,7 @@ if __name__ == "__main__":
         gt_root_rot = pose_aa_walk[:, :3]  # (N,3)
         root_rot_mats_np = (
             sRot.from_rotvec(gt_root_rot.cpu().numpy())
-            * sRot.from_matrix(np.array([[[0, 0, 1], [1, 0, 0], [0, 1, 0]]])).inv()
+            * sRot.from_quat([0.5, 0.5, 0.5, 0.5]).inv()
         ).as_matrix()  # (N,3,3)
         root_rot_mats = torch.from_numpy(root_rot_mats_np).float()
         # breakpoint()
@@ -147,14 +147,17 @@ if __name__ == "__main__":
         z_min_robot = robot_positions_world[:, :, 2].min().item()
         root_trans_offset_dump[..., 2] -= z_min_robot - 0.06
 
-        root_rot_quat = sRot.from_matrix(rel_rot.detach().cpu().numpy()).as_quat()
+        root_rot_quat_dump = (
+            sRot.from_rotvec(pose_aa_walk.cpu().numpy()[:, :3])
+            * sRot.from_quat([0.5, 0.5, 0.5, 0.5]).inv()
+        ).as_quat()
 
         # 保存重新计算的结果
         updated_data_dump[data_key] = {
             "root_trans_offset": root_trans_offset_dump.cpu().detach().numpy(),
             "dof": data["dof"],
             "pose_aa": data["pose_aa"],
-            "root_rot": root_rot_quat,
+            "root_rot": root_rot_quat_dump,
             "fps": 30,
         }
 

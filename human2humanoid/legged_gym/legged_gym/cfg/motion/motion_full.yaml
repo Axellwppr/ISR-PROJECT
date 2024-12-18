@@ -28,7 +28,8 @@ num_markers : 28
 # motion_file = "/hdd/zen/dev/copycat/h1_phc/data/h1/v2/singles/test.pkl"
 # motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/amass_phc_clean.pkl'
 # motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/amass_phc_clean_smooth.pkl'
-motion_file : 'resources/motions/xbot/amass_recomputed.pkl'
+# motion_file : 'resources/motions/xbot/amass_recomputed.pkl'
+motion_file : 'resources/motions/xbot/temp_incremental_50.pkl'
 skeleton_file : 'resources/robots/rel2/urdf/rel2.xml'
 marker_file : 'resources/objects/Marker/traj_marker.urdf'
 num_dof_pos_reference : 28
@@ -79,7 +80,7 @@ teleop_selected_keypoints_names : [
 
 
 resample_motions_for_envs : True
-resample_motions_for_envs_interval_s : 200
+resample_motions_for_envs_interval_s : 100000
 
 
 visualize_config:

@@ -1,125 +1,3 @@
-# import numpy as np
-# import os
-# import yaml
-# from tqdm import tqdm
-# import os.path as osp
-
-# from phc.utils import torch_utils
-# import joblib
-# import torch
-# import torch.multiprocessing as mp
-# import copy
-# import gc
-# from phc.smpllib.smpl_parser import (
-#     SMPL_Parser,
-#     SMPLH_Parser,
-#     SMPLX_Parser,
-# )
-# from scipy.spatial.transform import Rotation as sRot
-# import random
-# from phc.utils.flags import flags
-# from phc.utils.motion_lib_base import MotionLibBase, DeviceCache, compute_motion_dof_vels, FixHeightMode
-# from phc.utils.torch_h1_humanoid_batch import Humanoid_Batch
-# from easydict import EasyDict
-
-# def to_torch(tensor):
-#     if torch.is_tensor(tensor):
-#         return tensor
-#     else:
-#         return torch.from_numpy(tensor)
-
-
-# USE_CACHE = False
-# print("MOVING MOTION DATA TO GPU, USING CACHE:", USE_CACHE)
-
-# if not USE_CACHE:
-#     old_numpy = torch.Tensor.numpy
-
-#     class Patch:
-
-#         def numpy(self):
-#             if self.is_cuda:
-#                 return self.to("cpu").numpy()
-#             else:
-#                 return old_numpy(self)
-
-#     torch.Tensor.numpy = Patch.numpy
-
-
-# class MotionLibH1(MotionLibBase):
-
-#     def __init__(self, motion_file, device, fix_height=FixHeightMode.no_fix, masterfoot_conifg=None, min_length=-1, im_eval=False, multi_thread=True, mjcf_file=""):
-#         super().__init__(motion_file=motion_file, device=device, fix_height=fix_height, masterfoot_conifg=masterfoot_conifg, min_length=min_length, im_eval=im_eval, multi_thread=multi_thread)
-#         self.mesh_parsers = Humanoid_Batch(mjcf_file=mjcf_file, extend_hand = False)
-#         return
-
-
-#     @staticmethod
-#     def fix_trans_height(pose_aa, trans, curr_gender_betas, mesh_parsers, fix_height_mode):
-#         if fix_height_mode == FixHeightMode.no_fix:
-#             return trans, 0
-
-#         with torch.no_grad():
-#             raise NotImplementedError("Fix height is not implemented for H1")
-#             return trans, diff_fix
-
-#     @staticmethod
-#     def load_motion_with_skeleton(ids, motion_data_list, skeleton_trees, gender_betas, fix_height, mesh_parsers, masterfoot_config, target_heading,  max_len, queue, pid):
-#         # ZL: loading motion with the specified skeleton. Perfoming forward kinematics to get the joint positions
-#         np.random.seed(np.random.randint(5000)* pid)
-#         res = {}
-#         assert (len(ids) == len(motion_data_list))
-#         for f in range(len(motion_data_list)):
-#             curr_id = ids[f]  # id for this datasample
-#             curr_file = motion_data_list[f]
-#             if not isinstance(curr_file, dict) and osp.isfile(curr_file):
-#                 key = motion_data_list[f].split("/")[-1].split(".")[0]
-#                 curr_file = joblib.load(curr_file)[key]
-
-#             seq_len = curr_file['root_trans_offset'].shape[0]
-#             if max_len == -1 or seq_len < max_len:
-#                 start, end = 0, seq_len
-#             else:
-#                 start = random.randint(0, seq_len - max_len)
-#                 end = start + max_len
-
-#             trans = to_torch(curr_file['root_trans_offset']).clone()[start:end]
-#             pose_aa = to_torch(curr_file['pose_aa'][start:end])
-
-#             B, J, N = pose_aa.shape
-
-#             if not target_heading is None:
-#                 start_root_rot = sRot.from_rotvec(pose_aa[0, 0])
-#                 heading_inv_rot = sRot.from_quat(torch_utils.calc_heading_quat_inv(torch.from_numpy(start_root_rot.as_quat()[None, ])))
-#                 heading_delta = sRot.from_quat(target_heading) * heading_inv_rot
-#                 pose_aa[:, 0] = torch.tensor((heading_delta * sRot.from_rotvec(pose_aa[:, 0])).as_rotvec())
-#                 trans = torch.matmul(trans, torch.from_numpy(heading_delta.as_matrix().squeeze().T))
-
-#             ##### ZL: randomize the heading ######
-#             # if (not flags.im_eval) and (not flags.test):
-#             #     # if True:
-#             #     random_rot = np.zeros(3)
-#             #     random_rot[2] = np.pi * (2 * np.random.random() - 1.0)
-#             #     random_heading_rot = sRot.from_euler("xyz", random_rot)
-#             #     pose_aa = pose_aa.reshape(B, -1)
-#             #     pose_aa[:, :3] = torch.tensor((random_heading_rot * sRot.from_rotvec(pose_aa[:, :3])).as_rotvec())
-#             #     trans = torch.matmul(trans, torch.from_numpy(random_heading_rot.as_matrix().squeeze().T))
-#             ##### ZL: randomize the heading ######
-
-#             # trans, trans_fix = MotionLibSMPL.fix_trans_height(pose_aa, trans, curr_gender_beta, mesh_parsers, fix_height_mode = fix_height)
-
-#             curr_motion = mesh_parsers.fk_batch(pose_aa[None, ], trans[None, ], return_full= True)
-#             curr_motion = EasyDict({k: v.squeeze() if torch.is_tensor(v) else v for k, v in curr_motion.items() })
-
-
-#             res[curr_id] = (curr_file, curr_motion)
-
-#         if not queue is None:
-#             queue.put(res)
-#         else:
-#             return res
-
-
 import numpy as np
 import os
 import yaml
@@ -231,7 +109,9 @@ class MotionLibH1(MotionLibBase):
         else:
             sample_idxes = torch.remainder(torch.arange(len(skeleton_trees)) + start_idx, self._num_unique_motions ).to(self._device)
 
-        # import ipdb; ipdb.set_trace()
+        # print("debug sample")
+        # sample_idxes.fill_(np.where(self._motion_data_keys == "0-KIT_424_parkour08_poses")[0][0])
+        
         self._curr_motion_ids = sample_idxes
         self.one_hot_motions = torch.nn.functional.one_hot(self._curr_motion_ids, num_classes = self._num_unique_motions).to(self._device)  # Testing for obs_v5
         self.curr_motion_keys = self._motion_data_keys[sample_idxes]
@@ -247,6 +127,7 @@ class MotionLibH1(MotionLibBase):
 
         motion_data_list = self._motion_data_list[sample_idxes.cpu().numpy()]
         mp.set_sharing_strategy('file_descriptor')
+        
 
         manager = mp.Manager()
         queue = manager.Queue()
@@ -518,7 +399,7 @@ class MotionLibH1(MotionLibBase):
                 trans = torch.matmul(trans, torch.from_numpy(heading_delta.as_matrix().squeeze().T))
 
             # trans, trans_fix = MotionLibSMPL.fix_trans_height(pose_aa, trans, curr_gender_beta, mesh_parsers, fix_height_mode = fix_height)
-            curr_motion = mesh_parsers.fk_batch(pose_aa[None, ], trans[None, ], return_full= True, dt = dt)
+            curr_motion = mesh_parsers.fk_batch(pose_aa[None, ], trans[None, ], return_full= True, dt = dt, dof_gt = curr_file['dof'])
             curr_motion = EasyDict({k: v.squeeze() if torch.is_tensor(v) else v for k, v in curr_motion.items() })
 
             res[curr_id] = (curr_file, curr_motion)

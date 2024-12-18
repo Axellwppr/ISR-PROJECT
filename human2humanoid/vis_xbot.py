@@ -19,6 +19,8 @@ def main():
     sim_params.dt = 1.0 / 20.0  # 仿真步长
     sim_params.substeps = 2
     sim_params.gravity = gymapi.Vec3(0.0, 0.0, -9.81)
+    sim_params.up_axis = gymapi.UP_AXIS_Z
+    
 
     # 创建仿真环境（使用默认的物理引擎和设备）
     sim = gym.create_sim(0, 0, gymapi.SIM_PHYSX, sim_params)
@@ -72,7 +74,7 @@ def main():
     # 4. 加载轨迹数据
     # ================================
     # 加载test.pkl
-    trajectory_path = "data/new_robot/amass_all.pkl"  # 请确保路径正确
+    trajectory_path = "data/new_robot/test.pkl"  # 请确保路径正确
     if not os.path.exists(trajectory_path):
         print(f"轨迹文件未找到: {trajectory_path}")
         return
@@ -83,7 +85,7 @@ def main():
         return
 
     # 获取第一条轨迹
-    first_key = list(trajectory_data.keys())[13]
+    first_key = list(trajectory_data.keys())[0]
     traj = trajectory_data[first_key]
     # root_trans = traj["root_trans_offset"]  # (3,)
     dof_pos = traj["dof"]  # (num_frames, num_dofs)
@@ -110,12 +112,12 @@ def main():
     num_robot_dofs = gym.get_asset_dof_count(robot_asset)
     print(f"机器人关节数: {num_robot_dofs}")
 
-    # 确保轨迹中的关节数与机器人匹配
-    if dof_pos.shape[1] != len(joint_enable):
-        print(
-            f"轨迹关节数({dof_pos.shape[1]})与机器人关节数({len(joint_enable)})不匹配"
-        )
-        return
+    # # 确保轨迹中的关节数与机器人匹配
+    # if dof_pos.shape[1] != len(joint_enable):
+    #     print(
+    #         f"轨迹关节数({dof_pos.shape[1]})与机器人关节数({len(joint_enable)})不匹配"
+    #     )
+    #     return
 
     dof_props = gym.get_actor_dof_properties(env, robot_handle)
 
@@ -144,8 +146,13 @@ def main():
     while not gym.query_viewer_has_closed(viewer) and frame < num_frames:
         # 获取当前帧的关节角度
 
-        current_dof_pos = np.zeros((num_robot_dofs))
-        current_dof_pos[joint_enable_idx] = dof_pos[frame]
+        # current_dof_pos = np.zeros((num_robot_dofs))
+        current_dof_pos = dof_pos[frame]
+        
+        current_dof_pos = np.array([-0.1891,  0.0640,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.1884,
+          0.0517,  0.0000,  0.0000,  0.0000,  0.0000,  0.0000,  0.0815, -0.1383,
+          0.1889,  0.0000, -0.8673,  1.2099,  0.0000,  0.0000,  0.0776,  0.0000,
+          0.7800, -1.1180,  0.0000,  0.0000])
         # breakpoint()
         print(current_dof_pos)
 

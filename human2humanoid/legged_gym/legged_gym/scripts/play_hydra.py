@@ -51,14 +51,13 @@ def dict_compare(d1, d2):
 def play(cfg_hydra: DictConfig) -> None:
     cfg_hydra = EasyDict(OmegaConf.to_container(cfg_hydra, resolve=True))
     cfg_hydra.physics_engine = gymapi.SIM_PHYSX
-    
+
     # env_cfg, train_cfg = task_registry.get_cfgs(name=cfg_hydra.task)
     # import ipdb; ipdb.set_trace()
-    
-    env_cfg, train_cfg = cfg_hydra, cfg_hydra.train
-    
 
-    ##### Compare two configs. 
+    env_cfg, train_cfg = cfg_hydra, cfg_hydra.train
+
+    ##### Compare two configs.
     # env_cfg_, train_cfg_prev = task_registry.get_cfgs(name=cfg_hydra.task)
     # env_cfg_, train_cfg_prev = class_to_dict(env_cfg_), class_to_dict(train_cfg_prev)
     # for k, v in env_cfg_.items():
@@ -68,7 +67,7 @@ def play(cfg_hydra: DictConfig) -> None:
     #                 print(k, kk)
     #                 import ipdb; ipdb.set_trace()
     #                 print('...')
-        
+
     #     elif not v == env_cfg[k]:
     #         import ipdb; ipdb.set_trace()
     #         print('...')
@@ -84,7 +83,7 @@ def play(cfg_hydra: DictConfig) -> None:
     # env_cfg.terrain.num_cols = 5
     env_cfg.terrain.curriculum = False
     env_cfg.terrain.mesh_type = 'trimesh'
-    # env_cfg.terrain.mesh_type = 'plane'
+    # env_cfg.terrain.mesh_type = "plane"
     # if env_cfg.terrain.mesh_type == 'trimesh':
     #     env_cfg.terrain.terrain_types = ['flat', 'rough', 'low_obst']  # do not duplicate!
     #     env_cfg.terrain.terrain_proportions = [1.0, 0.0, 0.0]
@@ -99,12 +98,10 @@ def play(cfg_hydra: DictConfig) -> None:
     env_cfg.domain_rand.randomize_base_com = False
     env_cfg.domain_rand.randomize_ctrl_delay = False
     env_cfg.domain_rand.ctrl_delay_step_range = [1, 3]
-
-
+    
+    env_cfg.motion.resample_motions_for_envs_interval_s = 200
 
     # env_cfg.asset.termination_scales.max_ref_motion_distance = 1
-
-
 
     env_cfg.env.test = True
 
@@ -123,18 +120,19 @@ def play(cfg_hydra: DictConfig) -> None:
         from legged_gym.utils import key_response_fn
 
     # prepare environment
-    
+
     env, _ = task_registry.make_env_hydra(name=cfg_hydra.task, hydra_cfg=cfg_hydra, env_cfg=env_cfg)
 
     logger = Logger(env.dt)
     robot_index = 0 # which robot is used for logging
     joint_index = 4 # which joint is used for logging
-    stop_state_log = 200 # number of steps before plotting states
-    stop_rew_log = env.max_episode_length + 1 # number of steps before print average episode rewards
-
+    stop_state_log = -1  # 200  # number of steps before plotting states
+    stop_rew_log = (
+        -1
+    )  # env.max_episode_length + 1 # number of steps before print average episode rewards
 
     obs = env.get_observations()
-    
+
     if env_cfg.motion.realtime_vr_keypoints:
         init_root_pos = env._rigid_body_pos[..., 0, :].clone()
         init_avp_pos = avpposeinfo.avp_pose.copy()
@@ -143,10 +141,9 @@ def play(cfg_hydra: DictConfig) -> None:
     # obs[:, 9:12] = torch.Tensor([0.5, 0, 0])
     # load policy
     train_cfg.runner.resume = True
-    
-    
+
     ppo_runner, train_cfg = task_registry.make_alg_runner(env=env, name=cfg_hydra.task, args=cfg_hydra, train_cfg=train_cfg)
-    
+
     policy = ppo_runner.get_inference_policy(device=env.device)
     exported_policy_name = str(task_registry.loaded_policy_path.split('/')[-2]) + str(task_registry.loaded_policy_path.split('/')[-1])
     print('Loaded policy from: ', task_registry.loaded_policy_path)
@@ -161,8 +158,7 @@ def play(cfg_hydra: DictConfig) -> None:
         path = os.path.join(LEGGED_GYM_ROOT_DIR, 'logs', train_cfg.runner.experiment_name, 'exported', 'policies')
         export_policy_as_onnx(ppo_runner.alg.actor_critic, path, exported_onnx_name, onnx_num_observations=env_cfg.env.num_observations)
         print('Exported policy as onnx to: ', os.path.join(path, exported_onnx_name))
-        
-    
+
     if cfg_hydra.joystick:
         print(colored("joystick on", "green"))
         key_response = key_response_fn(mode='vel')
@@ -178,14 +174,14 @@ def play(cfg_hydra: DictConfig) -> None:
         listener.start()
 
     i = 0
-    
+
     while (not NOROSPY and not rospy.is_shutdown()) or (NOROSPY):
         # for i in range(1000*int(env.max_episode_length)):
 
         # obs[:, -19:] = 0 # will destroy the performance
-        
+
         actions = policy(obs.detach())
-        
+
         # print(torch.sum(torch.square(env.projected_gravity[:, :2]), dim=1))
         obs, _, rews, dones, infos = env.step(actions.detach())
 
@@ -206,11 +202,10 @@ def play(cfg_hydra: DictConfig) -> None:
             obs[:,9] = 0.5
             obs[:,10] = 0.0
             obs[:,11] = 0.0
-        
+
         # overwrite linear velocity - z and angular velocity - xy
         # obs[:, 40] = 0.
         # obs[: 41:43] = 0.
-        
 
         if i < stop_state_log:
             logger.log_states(

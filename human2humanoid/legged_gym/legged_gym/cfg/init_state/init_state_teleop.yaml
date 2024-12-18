@@ -7,18 +7,18 @@ max_angvel : 0.5
 default_joint_angles :  # : target angles [rad] when action : 0.0
     left_shoulder_pitch_joint: 0.
     left_shoulder_roll_joint: 0.
-    left_arm_yaw_joint: 0.
+    left_arm_yaw_joint: 0. #
     left_elbow_pitch_joint: 0.
-    left_elbow_yaw_joint: 0.
+    left_elbow_yaw_joint: 0. #
     left_wrist_roll_joint: 0.
-    left_wrist_yaw_joint: 0.
+    left_wrist_yaw_joint: 0. #
     right_shoulder_pitch_joint: 0.
     right_shoulder_roll_joint: 0.
-    right_arm_yaw_joint: 0.
+    right_arm_yaw_joint: 0. #
     right_elbow_pitch_joint: 0.
-    right_elbow_yaw_joint: 0.
+    right_elbow_yaw_joint: 0. #
     right_wrist_roll_joint: 0.
-    right_wrist_yaw_joint: 0.
+    right_wrist_yaw_joint: 0. #
     waist_yaw_joint: 0.
     waist_roll_joint: 0.
     left_leg_roll_joint: 0.

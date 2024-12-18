@@ -1,4 +1,3 @@
-
 import sys
 from isaacgym import gymapi
 from isaacgym import gymutil
@@ -10,6 +9,25 @@ class BaseTask():
 
     def __init__(self, cfg, sim_params, physics_engine, sim_device, headless):
         self.gym = gymapi.acquire_gym()
+
+        # sim_params = gymapi.SimParams()
+        # sim_params.dt = 0.005
+        # sim_params.substeps = 1
+        # sim_params.up_axis = gymapi.UP_AXIS_Z
+        # sim_params.gravity = gymapi.Vec3(0.0, 0.0, -9.81)
+
+        # # PhysX settings
+        # sim_params.physx.num_threads = 4
+        # sim_params.physx.solver_type = 1  # 0: pgs, 1: tgs
+        # sim_params.physx.num_position_iterations = 4
+        # sim_params.physx.num_velocity_iterations = 1
+        # sim_params.physx.contact_offset = 0.02
+        # sim_params.physx.rest_offset = 0.0
+        # sim_params.physx.bounce_threshold_velocity = 0.2
+        # sim_params.physx.max_depenetration_velocity = 1.0
+        # sim_params.physx.max_gpu_contact_pairs = 16777210
+        # sim_params.physx.default_buffer_size_multiplier = 10.0
+        # sim_params.physx.contact_collection = gymapi.ContactCollectionMode.ALL
 
         self.sim_params = sim_params
         self.physics_engine = physics_engine
@@ -23,7 +41,7 @@ class BaseTask():
             self.device = self.sim_device
         else:
             self.device = 'cpu'
-        
+
         # graphics device for rendering, -1 for no rendering
         self.graphics_device_id = self.sim_device_id
         if self.headless == True:
@@ -53,6 +71,7 @@ class BaseTask():
 
         self.extras = {}
         # create envs, sim and viewer
+        # breakpoint()
         self.create_sim()
         self.gym.prepare_sim(self.sim)
 
@@ -72,7 +91,7 @@ class BaseTask():
 
     def get_observations(self):
         return self.obs_buf
-    
+
     def get_privileged_observations(self):
         return self.privileged_obs_buf
 
@@ -83,7 +102,7 @@ class BaseTask():
     def reset(self):
         """ Reset all robots"""
         self.reset_idx(torch.arange(self.num_envs, device=self.device))
-        
+
         obs, privileged_obs, _, _, _ = self.step(torch.zeros(self.num_envs, self.num_actions, device=self.device, requires_grad=False))
         # self.gym.refresh_actor_root_state_tensor(self.sim)
         # self.gym.refresh_net_contact_force_tensor(self.sim)
@@ -94,7 +113,7 @@ class BaseTask():
 
     def step(self, actions):
         raise NotImplementedError
-    
+
     def next_task(self):
         pass 
     def render(self, sync_frame_time=True):

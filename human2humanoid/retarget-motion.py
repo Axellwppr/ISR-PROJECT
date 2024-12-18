@@ -17,12 +17,17 @@ import joblib
 from smpl_sim.smpllib.smpl_parser import SMPL_Parser, SMPL_BONE_ORDER_NAMES
 
 # 引入pytorch_kinematics
-import pytorch_kinematics as pk
+from phc.utils.torch_h1_humanoid_batch import Humanoid_Batch
 
 # 导入Matplotlib模块
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from utils import compute_rotation_matrix_batch, compute_rotation_matrix
+from utils import (
+    compute_rotation_matrix_batch,
+    compute_rotation_matrix,
+    plot_dynamic_points,
+)
+import mujoco as mj
 
 
 # =========== 函数定义 =========== #
@@ -48,7 +53,7 @@ def load_amass_data(data_path):
     }
 
 
-def plot_frame(robot_pos, smpl_pos, iteration, frame_idx, show_vec):
+def plot_frame(robot_pos, smpl_pos, iteration, frame_idx, show_vec=None):
     """
     绘制机器人和SMPL关节位置的3D图，并阻塞优化过程直到窗口关闭。
     """
@@ -64,18 +69,18 @@ def plot_frame(robot_pos, smpl_pos, iteration, frame_idx, show_vec):
     ax.scatter(
         smpl_pos[:, 0], smpl_pos[:, 1], smpl_pos[:, 2], c="b", label="SMPL Joints"
     )
-
-    # 绘制向量
-    ax.quiver(
-        robot_pos[0, 0],
-        robot_pos[0, 1],
-        robot_pos[0, 2],
-        show_vec[0],
-        show_vec[1],
-        show_vec[2],
-        color="g",
-        label="Y Axis",
-    )
+    if show_vec is not None:
+        # 绘制向量
+        ax.quiver(
+            robot_pos[0, 0],
+            robot_pos[0, 1],
+            robot_pos[0, 2],
+            show_vec[0],
+            show_vec[1],
+            show_vec[2],
+            color="g",
+            label="Y Axis",
+        )
 
     # 设置坐标轴标签和标题
     ax.set_xlabel("X")
@@ -116,7 +121,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--robot_urdf",
         type=str,
-        default="/home/axell/desktop/humanoid/humanoid-benchmark-main/isaacLab/manipulation/assets/urdf/rel2/urdf/rel2.urdf",
+        default="/home/axell/desktop/11-30-ISR-PROJ/human2humanoid/resources/robots/rel2/urdf/rel2.xml",
     )  # 请修改为你的URDF路径
     args = parser.parse_args()
 
@@ -137,28 +142,28 @@ if __name__ == "__main__":
 
     # =========== 加载URDF并建立运动链 ===========
     with open(args.robot_urdf, "rb") as f:
-        urdf_str = f.read()
-    chain = pk.build_chain_from_urdf(urdf_str)
+        urdf_str = f.read().decode("utf-8")
+        # breakpoint()
+        urdf_str = urdf_str.replace(
+            'file="',
+            'file="/home/axell/desktop/11-30-ISR-PROJ/human2humanoid/resources/robots/rel2/meshes/',
+        )
+    fk = Humanoid_Batch(device=device, mjcf_file=args.robot_urdf)
+    # chain = pk.build_chain_from_mjcf(urdf_str)
 
     # 获得URDF中的joint和link信息
-    all_link_names = chain.get_link_names()
-    all_joint_names = chain.get_joint_parameter_names()
-    print(all_joint_names)
+    model = mj.MjModel.from_xml_path(
+        args.robot_urdf,
+    )
     # breakpoint()
-    chain.print_tree()
+    all_link_names = [model.body(i).name for i in range(model.nbody)][1:]
+    all_joint_names = [model.joint(i).name for i in range(model.njnt)][1:]
+    rotate_axis = [model.joint(i).axis for i in range(model.njnt)][1:]
+    # print(all_link_names, all_joint_names)
+    # breakpoint()
+    rotate_axis = torch.from_numpy(np.stack(rotate_axis, axis=0))
 
-    rotate_axis = []
-    joint_data = chain.get_joints()
-
-    for idx, joint in enumerate(joint_data):
-        if joint.joint_type == "revolute":
-            rotate_axis.append(joint.axis)
-        else:
-            print(joint.joint_type)
-
-    rotate_axis = torch.stack(rotate_axis, dim=0)
-
-    print(rotate_axis)
+    # print(rotate_axis)
 
     # =========== 定义关节映射 ===========
     from link_trans import smpl_joint_pick, new_robot_joint_pick, joint_enable
@@ -192,6 +197,7 @@ if __name__ == "__main__":
     count = 0
 
     for data_key in pbar:
+        data_key = "0-KIT_424_parkour08_poses"
         if data_key not in key_name_to_pkls:
             print("Not found: ", data_key)
             continue
@@ -225,12 +231,16 @@ if __name__ == "__main__":
         offset = joints[:, 0] - trans
         root_trans_offset = trans + offset
 
-        gt_root_rot = pose_aa_walk[:, :3]  # (N,3)
-        root_rot_mats_np = (
-            sRot.from_rotvec(gt_root_rot.cpu().numpy())
-            * sRot.from_matrix(np.array([[[0, 0, 1], [1, 0, 0], [0, 1, 0]]])).inv()
-        ).as_matrix()  # (N,3,3)
-        root_rot_mats = torch.from_numpy(root_rot_mats_np).float().to(device)  # (N,3,3)
+        gt_root_rot = (
+            torch.from_numpy(
+                (
+                    sRot.from_rotvec(pose_aa_walk.cpu().numpy()[:, :3])
+                    * sRot.from_quat([0.5, 0.5, 0.5, 0.5]).inv()
+                ).as_rotvec()
+            )
+            .float()
+            .to(device)
+        )
 
         ### 初始化
         M = len(joint_enable)
@@ -254,54 +264,33 @@ if __name__ == "__main__":
         target_smpl_pos = scaled_joints_opt[
             :, smpl_joint_pick_idx
         ]  # Shape: (N, len, 3)
-        y_vec = target_smpl_pos[:, 5, :] - target_smpl_pos[:, 8, :]  # 左右肩膀定义的Y轴
-        x_vec = target_smpl_pos[:, -1, :] - target_smpl_pos[:, 0, :]
-
         diff_max = float("inf")
         best_loss = float("inf")
         best_dof = None
-        for iteration in range(500):
+        for iteration in range(800):
             joint_value = torch.zeros((N, len(all_joint_names)), dtype=torch.float32)
             joint_value[:, joint_enable_idx] = dof_pos_new[0]  # Shape: (N, M)
             # 批量前向计算机器人FK
-            transforms = chain.forward_kinematics(joint_value)
-
-            robot_positions = torch.stack(
-                [
-                    transforms[all_link_names[idx]].get_matrix()[:, :3, 3]
-                    for idx in new_robot_joint_pick_idx
-                ],
-                dim=1,
-            )  # Shape: (N, len(new_robot_joint_pick_idx), 3)
-            robot_positions = (robot_positions - robot_positions[:, 0:1, :]).transpose(
-                1, 2
-            )
-            # waist rot
-            waist_rot = transforms["waist_yaw_link"].get_matrix()[:, :3, :3]
-            rel_rot = torch.matmul(root_rot_mats, torch.linalg.inv(waist_rot))
-            # rel_rot = torch.matmul(head_rot, rel_rot)
-            robot_positions_world = torch.matmul(rel_rot, robot_positions).transpose(
-                1, 2
-            )
-
-            y_vec_xbot = (
-                robot_positions_world[:, 5, :] - robot_positions_world[:, 8, :]
-            )  # 左右肩膀定义的Y轴
-            x_vec_xbot = (
-                robot_positions_world[:, -1, :] - robot_positions_world[:, 0, :]
-            )
-
-            head_rot = compute_rotation_matrix(x_vec_xbot, y_vec_xbot, x_vec, y_vec)
-
             # breakpoint()
-            rel_rot = torch.matmul(head_rot, root_rot_mats)
-            robot_positions_world = (
-                torch.matmul(root_rot_mats, robot_positions).transpose(1, 2)
-                + root_pos_opt
+            pose_aa_new = torch.cat(
+                [
+                    gt_root_rot[None, :, None],
+                    (rotate_axis.unsqueeze(0) * joint_value.unsqueeze(-1)).unsqueeze(0),
+                ],
+                axis=2,
             )
-
+            transforms = fk.fk_batch(pose_aa_new, root_trans_offset[None,])
+            # breakpoint()
+            robot_positions = transforms["global_translation"][0][
+                :, new_robot_joint_pick_idx, :
+            ]
+            robot_positions = (
+                robot_positions
+                - robot_positions[:, 0:1, :]
+                + target_smpl_pos[:, 0:1, :]
+            )
             # 计算差异
-            diff = robot_positions_world - target_smpl_pos
+            diff = robot_positions - target_smpl_pos
 
             # 计算损失
             loss = diff.norm(dim=-1).mean()
@@ -310,7 +299,7 @@ if __name__ == "__main__":
                 diff_max = diff.norm(dim=-1).max().item()
                 best_loss = loss.item()
 
-            pbar.set_description_str(
+            print(
                 f"Iteration {iteration} Loss: {loss.item()*1000:.4f}, Max Diff: {diff_max*1000:.4f}"
             )
 
@@ -320,69 +309,61 @@ if __name__ == "__main__":
             optimizer_pose.step()
 
             # 每20次迭代绘制一次图形，并暂停优化直到窗口关闭
-            if iteration % 100 == 0:
-                if N > FRAME_INDEX_TO_PLOT:
-                    frame_idx = FRAME_INDEX_TO_PLOT
+            # if iteration % 100 == 0:
+            #     if N > FRAME_INDEX_TO_PLOT:
+            #         frame_idx = FRAME_INDEX_TO_PLOT
 
-                    robot_pos_frame = (
-                        robot_positions_world[frame_idx].detach().cpu().numpy()
-                    )  # (len, 3)
-                    smpl_pos_frame = (
-                        target_smpl_pos[frame_idx].detach().cpu().numpy()
-                    )  # (len, 3)
+            #         robot_pos_frame = (
+            #             robot_positions[frame_idx].detach().cpu().numpy()
+            #         )  # (len, 3)
+            #         smpl_pos_frame = (
+            #             target_smpl_pos[frame_idx].detach().cpu().numpy()
+            #         )  # (len, 3)
 
-                    print(f"Iteration {iteration}: Plotting frame {frame_idx}")
+            #         print(f"Iteration {iteration}: Plotting frame {frame_idx}")
 
-                    # 绘制并阻塞
-                    plot_frame(
-                        robot_pos_frame,
-                        smpl_pos_frame,
-                        iteration,
-                        frame_idx,
-                        x_vec[FRAME_INDEX_TO_PLOT].detach().cpu().numpy(),
-                    )
+            #         # 绘制并阻塞
+            #         plot_frame(
+            #             robot_pos_frame,
+            #             smpl_pos_frame,
+            #             iteration,
+            #             frame_idx,
+            #             # x_vec[FRAME_INDEX_TO_PLOT].detach().cpu().numpy(),
+            #         )
+        plot_dynamic_points(
+            robot_positions.detach().cpu().numpy(),
+            target_smpl_pos.detach().cpu().numpy(),
+        )
 
-        if diff_max > 0.3:
-            print(f"Max Diff: {diff_max}, Skip {data_key}")
-            continue
+        # if diff_max > 0.3:
+        #     print(f"Max Diff: {diff_max}, Skip {data_key}")
+        #     continue
 
-        if best_loss > 0.08:
-            print(f"Loss: {best_loss}, Skip {data_key}")
-            continue
-
-        # 优化结束后，保存数据
-        root_rot_quat = sRot.from_matrix(rel_rot.detach().cpu().numpy()).as_quat()
-
+        # if best_loss > 0.08:
+        #     print(f"Loss: {best_loss}, Skip {data_key}")
+        #     continue
         root_trans_offset_dump = root_pos_opt.squeeze(1).clone()
-        z_min_robot = robot_positions_world[:, :, 2].min().item()
+        z_min_robot = robot_positions[:, :, 2].min().item()
         root_trans_offset_dump[..., 2] -= z_min_robot - 0.06
 
-        best_joint_value = torch.zeros((N, len(all_joint_names)), dtype=torch.float32)
-        best_joint_value[:, joint_enable_idx] = dof_pos_new[0]
-
-        # breakpoint()
-        best_pose_aa = torch.cat(
-            [
-                torch.from_numpy(
-                    sRot.from_matrix(root_rot_mats.detach().cpu().numpy()).as_rotvec()
-                ).unsqueeze(1),
-                rotate_axis.unsqueeze(0) * best_joint_value.unsqueeze(-1),
-            ],
-            axis=1,
-        )
-        # breakpoint()
+        root_rot_quat = (
+            sRot.from_rotvec(pose_aa_walk.cpu().numpy()[:, :3])
+            * sRot.from_quat([0.5, 0.5, 0.5, 0.5]).inv()
+        ).as_quat()
+        breakpoint()
         data_dump[data_key] = {
             "root_trans_offset": root_trans_offset_dump.cpu().detach().numpy(),
-            "dof": best_joint_value.detach().cpu().numpy(),
-            "pose_aa": best_pose_aa.cpu().detach().numpy(),
+            "dof": joint_value.detach().cpu().numpy(),
+            "pose_aa": pose_aa_new.squeeze(0).cpu().detach().numpy(),
             "root_rot": root_rot_quat,
             "fps": 30,
         }
 
-        # print(
-        #     f"dumping {data_key} for testing, remove the line if you want to process all data"
-        # )
-        # joblib.dump(data_dump, "data/new_robot/test.pkl")
+        print(
+            f"dumping {data_key} for testing, remove the line if you want to process all data"
+        )
+        joblib.dump(data_dump, "data/new_robot/test.pkl")
+        break
         # 移除调试断点
         # import ipdb
         # ipdb.set_trace()

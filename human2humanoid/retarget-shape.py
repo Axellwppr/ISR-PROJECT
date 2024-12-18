@@ -84,7 +84,7 @@ all_joint_names = chain.get_joint_parameter_names()
 print(all_joint_names)
 # breakpoint()
 all_link_names = chain.get_link_names()
-
+breakpoint()
 robot_joint_pick_idx = [all_link_names.index(ln) for ln in new_robot_joint_pick]
 
 # ================================
