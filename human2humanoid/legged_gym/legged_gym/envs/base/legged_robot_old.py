@@ -331,6 +331,8 @@ class LeggedRobot(BaseTask):
             self.gym.refresh_dof_state_tensor(self.sim)
 
         self.post_physics_step()
+        
+        # print(self.gym.get_sim_time(self.sim))
 
         # return clipped obs, clipped states (None), rewards, dones and infos
         clip_obs = self.cfg.normalization.clip_observations
@@ -3219,8 +3221,8 @@ class LeggedRobot(BaseTask):
                 self.root_states[env_ids, 3:7] = motion_res["root_rot"][env_ids]
                 self.root_states[env_ids, 7:10] = motion_res["root_vel"][
                     env_ids
-                ] * 0  # ZL: use random velicty initation should be more robust?
-                self.root_states[env_ids, 10:13] = motion_res["root_ang_vel"][env_ids] * 0
+                ] # ZL: use random velicty initation should be more robust?
+                self.root_states[env_ids, 10:13] = motion_res["root_ang_vel"][env_ids]
 
                 # breakpoint()
 
