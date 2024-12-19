@@ -5934,6 +5934,7 @@ class LeggedRobot(BaseTask):
         diff_global_body_rot = torch_utils.quat_mul(
             ref_body_rot, torch_utils.quat_conjugate(body_rot)
         )
+        # print(body_rot, ref_body_rot, diff_global_body_rot)
         diff_global_body_angle = torch_utils.quat_to_angle_axis(diff_global_body_rot)[0]
         diff_global_body_angle_dist = (diff_global_body_angle**2).mean(dim=-1)
         r_body_rot = torch.exp(
@@ -6194,8 +6195,8 @@ class LeggedRobot(BaseTask):
         rew_feet_max_height = torch.sum(
             (
                 torch.clamp_min(
-                    self.feet_air_max_height -
-                    self.cfg.rewards.desired_feet_max_height_for_this_air,
+                    self.cfg.rewards.desired_feet_max_height_for_this_air - 
+                    self.feet_air_max_height,
                     0,
                 )
             )

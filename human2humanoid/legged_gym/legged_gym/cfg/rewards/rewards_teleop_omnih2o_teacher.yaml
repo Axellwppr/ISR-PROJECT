@@ -18,7 +18,7 @@ scales:
   stable_lower_when_vrclose_positive: 0 #-500.0
   orientation : -200.0
   feet_height : -0
-  feet_max_height_for_this_air : 1000
+  feet_max_height_for_this_air : -2500
   closing: 0
   teleop_selected_joint_position : 32 # 5.0
   teleop_selected_joint_vel : 16 # 5.
