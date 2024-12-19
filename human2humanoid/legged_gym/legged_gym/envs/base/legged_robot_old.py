@@ -5386,10 +5386,9 @@ class LeggedRobot(BaseTask):
         left_gravity = quat_rotate_inverse(left_quat, self.gravity_vec)
         right_quat = self._rigid_body_rot[:, self.feet_indices[1]]
         right_gravity = quat_rotate_inverse(right_quat, self.gravity_vec)
-        # print(left_gravity[:, z_axis])
         return (
-            torch.sum(torch.square(left_gravity[:, xy_axis]), dim=1) ** 0.5
-            + torch.sum(torch.square(right_gravity[:, xy_axis]), dim=1) ** 0.5
+            torch.sum(torch.square(left_gravity[:, [0,2]]), dim=1) ** 0.5
+            + torch.sum(torch.square(right_gravity[:, [0,2]]), dim=1) ** 0.5
         )
 
     def _reward_base_height(self):
