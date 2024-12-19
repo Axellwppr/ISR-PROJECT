@@ -2215,26 +2215,8 @@ class LeggedRobot(BaseTask):
                 dof_vel = self.dof_vel
 
                 body_pos_extend = body_pos.clone()
-                # print(f"body_pos_extend.shape: {body_pos_extend.shape}")
-                # print(f"self._track_bodies_extend_id: {self._track_bodies_extend_id}")
-                # track_bodies_extend_id_tensor = torch.tensor(self._track_bodies_extend_id, device=body_pos_extend.device)
-
-                # # Ensure the indices are valid
-                # assert torch.all((track_bodies_extend_id_tensor >= 0)), "Index out of bounds1"
-                # if not torch.all(track_bodies_extend_id_tensor < body_pos_extend.shape[1]):
-                #     print("Error: Index out of bounds in the second dimension")
-                #     print(f"track_bodies_extend_id_tensor: {track_bodies_extend_id_tensor}")
-                #     print(f"body_pos_extend.shape[1]: {body_pos_extend.shape[1]}")
-                #     out_of_bounds_indices = track_bodies_extend_id_tensor[track_bodies_extend_id_tensor >= body_pos_extend.shape[1]]
-                #     print(f"Out of bounds indices: {out_of_bounds_indices}")
-                #     raise ValueError("Index out of bounds in the second dimension")
-
                 body_pos_subset = body_pos_extend[:, self._track_bodies_extend_id, :]
 
-                # print(f"body_rot.shape: {body_rot.shape}")
-                # print(f"self.extend_body_parent_ids: {self.extend_body_parent_ids}")
-                # extend_curr_rot = body_rot[:, self.extend_body_parent_ids].clone()
-                # extend_curr_rot = body_rot[:, self.extend_body_parent_ids]
                 body_rot_extend = body_rot.clone()
                 body_rot_subset = body_rot_extend[:, self._track_bodies_extend_id, :]
 
@@ -5404,8 +5386,8 @@ class LeggedRobot(BaseTask):
         right_gravity = quat_rotate_inverse(right_quat, self.gravity_vec)
         # print(left_gravity[:, z_axis])
         return (
-            torch.sum(torch.square(left_gravity[:, z_axis]), dim=1) ** 0.5
-            + torch.sum(torch.square(right_gravity[:, z_axis]), dim=1) ** 0.5
+            torch.sum(torch.square(left_gravity[:, xy_axis]), dim=1) ** 0.5
+            + torch.sum(torch.square(right_gravity[:, xy_axis]), dim=1) ** 0.5
         )
 
     def _reward_base_height(self):
@@ -6211,8 +6193,8 @@ class LeggedRobot(BaseTask):
         rew_feet_max_height = torch.sum(
             (
                 torch.clamp_min(
-                    self.cfg.rewards.desired_feet_max_height_for_this_air
-                    - self.feet_air_max_height,
+                    self.feet_air_max_height -
+                    self.cfg.rewards.desired_feet_max_height_for_this_air,
                     0,
                 )
             )

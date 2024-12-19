@@ -387,35 +387,41 @@ class XbotTeleopCfg(LeggedRobotCfg):
         teleop_body_rot_sigma = 0.1
         teleop_body_vel_sigma = 10.0
         teleop_body_ang_vel_sigma = 10.0
-        teleop_body_rot_selection = ["waist_roll_link"]
-        teleop_body_vel_selection = ["waist_roll_link"]
-        teleop_body_pos_selection = ["waist_roll_link"]
-        teleop_body_ang_vel_selection = ["waist_roll_link"]
+        teleop_body_rot_selection = ["base_link"]
+        teleop_body_vel_selection = ["base_link"]
+        teleop_body_pos_selection = ["base_link"]
+        teleop_body_ang_vel_selection = ["base_link"]
         teleop_joint_pos_selection = {
-            # upper body
-            "waist_yaw_joint": 2.0,
-            "waist_roll_joint": 2.0,
-            "left_shoulder_pitch_joint": 2.0,
-            "left_shoulder_roll_joint": 2.0,
-            "left_arm_yaw_joint": 2.0,
-            "left_elbow_pitch_joint": 2.0,
-            "left_wrist_roll_joint": 2.0,
-            "right_shoulder_pitch_joint": 2.0,
-            "right_shoulder_roll_joint": 2.0,
-            "right_arm_yaw_joint": 2.0,
-            "right_elbow_pitch_joint": 2.0,
-            "right_wrist_roll_joint": 2.0,
-            # lower body
-            "left_leg_pitch_joint": 2.0,
-            "left_leg_roll_joint": 0.5,
-            # "left_hip_yaw_joint": 0.5,
-            "left_knee_joint": 0.5,
-            # "left_ankle_joint": 0.5,
-            "right_leg_pitch_joint": 2.0,
-            "right_leg_roll_joint": 0.5,
-            # "right_hip_yaw_joint": 0.5,
-            "right_knee_joint": 0.5,
-            # "right_ankle_joint": 0.5,
+            # 'base_link', 'left_shoulder_pitch_link', 'left_shoulder_roll_link', 'left_arm_yaw_link', 'left_elbow_pitch_link', 'left_elbow_yaw_link', 'left_wrist_roll_link', 'left_wrist_yaw_link', 'right_shoulder_pitch_link', 'right_shoulder_roll_link', 'right_arm_yaw_link', 'right_elbow_pitch_link', 'right_elbow_yaw_link', 'right_wrist_roll_link', 'right_wrist_yaw_link', 'waist_yaw_link', 'waist_roll_link', 'left_leg_roll_link', 'left_leg_yaw_link', 'left_leg_pitch_link', 'left_knee_link', 'left_ankle_pitch_link', 'left_ankle_roll_link', 'right_leg_roll_link', 'right_leg_yaw_link', 'right_leg_pitch_link', 'right_knee_link', 'right_ankle_pitch_link', 'right_ankle_roll_link'
+            "base_link": 2.0,
+            "left_shoulder_pitch_link": 2.0,
+            "left_shoulder_roll_link": 2.0,
+            "left_arm_yaw_link": 2.0,
+            "left_elbow_pitch_link": 2.0,
+            "left_elbow_yaw_link": 2.0,
+            "left_wrist_roll_link": 2.0,
+            "left_wrist_yaw_link": 2.0,
+            "right_shoulder_pitch_link": 2.0,
+            "right_shoulder_roll_link": 2.0,
+            "right_arm_yaw_link": 2.0,
+            "right_elbow_pitch_link": 2.0,
+            "right_elbow_yaw_link": 2.0,
+            "right_wrist_roll_link": 2.0,
+            "right_wrist_yaw_link": 2.0,
+            "waist_yaw_link": 2.0,
+            "waist_roll_link": 2.0,
+            "left_leg_roll_link": 0.5,
+            "left_leg_yaw_link": 0.5,
+            "left_leg_pitch_link": 0.5,
+            "left_knee_link": 0.5,
+            "left_ankle_pitch_link": 0.5,
+            "left_ankle_roll_link": 0.5,
+            "right_leg_roll_link": 0.5,
+            "right_leg_yaw_link": 0.5,
+            "right_leg_pitch_link": 0.5,
+            "right_knee_link": 0.5,
+            "right_ankle_pitch_link": 0.5,
+            "right_ankle_roll_link": 0.5,
         }
 
     class normalization:

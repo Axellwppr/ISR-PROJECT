@@ -3,33 +3,8 @@ visualize : False
 recycle_motion : True
 terrain_level_down_distance : 0.5
 num_markers : 28
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/walking_gesture.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/standing_one_gesture.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/standing.pkl'\
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/standing_20s_fpaa30.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/stable_wave_short.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/stable_wave_short_fpaa30.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/standing_20s_fpaa30.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/wave_and_walk_unfiltered.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/amass_run.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/gestures_3.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/walking_gesture_filered_12_fix.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/walking_gesture_filtered_fix.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/walking_gesture_filered_4.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/stable_punch.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/stable_amass.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/walk_fitted.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/bent_slowalk.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/walking_gesture_17.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/amass_and_stable_phc_filtered.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/amass_phc_filtered.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/amass_phc_filtered_shrinked800.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/amass_full.pkl'
-# motion_file = "/hdd/zen/dev/copycat/h1_phc/data/h1/v2/singles/test.pkl"
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/amass_phc_clean.pkl'
-# motion_file = '{LEGGED_GYM_ROOT_DIR}/resources/motions/h1/amass_phc_clean_smooth.pkl'
-# motion_file : 'resources/motions/xbot/amass_recomputed.pkl'
-motion_file : 'resources/motions/xbot/temp_incremental_50.pkl'
+
+motion_file : 'resources/motions/xbot/amass_all_merged_optimized.pkl'
 skeleton_file : 'resources/robots/rel2/urdf/rel2.xml'
 marker_file : 'resources/objects/Marker/traj_marker.urdf'
 num_dof_pos_reference : 28
@@ -38,7 +13,7 @@ num_dof_vel_reference : 28
 extend_hand: False
 extend_head: False
 
-future_tracks: False
+future_tracks: True
 num_traj_samples: 1
 traj_sample_timestep_inv: 50
 
@@ -59,23 +34,10 @@ teleop_level_down_episode_length : 30
 # teleop_obs_version : 'v-teleop-clean-nolastaction'
 # teleop_obs_version : 'v-teleop-extend'
 # teleop_obs_version : 'v-teleop-extend-nolinvel'
-teleop_obs_version : 'v-teleop-extend-max'
+teleop_obs_version : 'v-teleop-extend-max-full'
 # teleop_obs_version : 'v-teleop-extend-max-nolinvel'
 # teleop_obs_version : 'v-min2'
-teleop_selected_keypoints_names : [
-    "waist_roll_link",
-    "left_knee_link",
-    "left_ankle_pitch_link",
-    "right_knee_link",
-    "right_ankle_pitch_link",
-    "left_shoulder_roll_link",
-    "left_arm_yaw_link",
-    # "left_hand_ee_link",
-    "right_shoulder_roll_link",
-    "right_arm_yaw_link",
-    # "right_hand_ee_link",
-    # "neck_pitch_link",
-]
+teleop_selected_keypoints_names : ['base_link', 'left_shoulder_pitch_link', 'left_shoulder_roll_link', 'left_arm_yaw_link', 'left_elbow_pitch_link', 'left_elbow_yaw_link', 'left_wrist_roll_link', 'left_wrist_yaw_link', 'right_shoulder_pitch_link', 'right_shoulder_roll_link', 'right_arm_yaw_link', 'right_elbow_pitch_link', 'right_elbow_yaw_link', 'right_wrist_roll_link', 'right_wrist_yaw_link', 'waist_yaw_link', 'waist_roll_link', 'left_leg_roll_link', 'left_leg_yaw_link', 'left_leg_pitch_link', 'left_knee_link', 'left_ankle_pitch_link', 'left_ankle_roll_link', 'right_leg_roll_link', 'right_leg_yaw_link', 'right_leg_pitch_link', 'right_knee_link', 'right_ankle_pitch_link', 'right_ankle_roll_link']
 #[ 'pelvis',  'left_hip_yaw_link', 'left_hip_roll_link','left_hip_pitch_link', 'left_knee_link', 'left_ankle_link', 'right_hip_yaw_link', 'right_hip_roll_link', 'right_hip_pitch_link', 'right_knee_link', 'right_ankle_link', 'torso_link', 'left_shoulder_pitch_link', 'left_shoulder_roll_link', 'left_shoulder_yaw_link', 'left_elbow_link',  'right_shoulder_pitch_link', 'right_shoulder_roll_link', 'right_shoulder_yaw_link', 'right_elbow_link']
 
 
@@ -97,6 +59,11 @@ visualize_config:
     - [0.157, 0.231, 0.361] # right_hip_pitch_joint
     - [0.157, 0.231, 0.361] # right_knee_joint
     - [0.157, 0.231, 0.361] # right_ankle_joint
+    - [0.157, 0.231, 0.361] # right_hip_roll_joint
+    - [0.157, 0.231, 0.361] # right_hip_pitch_joint
+    - [0.157, 0.231, 0.361] # right_knee_joint
+    - [0.157, 0.231, 0.361] # right_ankle_joint
+    - [0.157, 0.231, 0.361] # right_ankle_joint
     - [0.765, 0.298, 0.498] # torso_joint
     - [1, 0.651, 0] # left_shoulder_pitch_joint
     - [1, 0.651, 0] # left_shoulder_roll_joint
@@ -108,6 +75,7 @@ visualize_config:
     - [1, 0.651, 0] # right_elbow_joint
     - [1, 0.651, 0] # right_elbow_joint_extend
     - [1, 0.651, 0] # left_elbow_joint_extend
+    - [1, 0.651, 0] # head_link
     - [1, 0.651, 0] # head_link
 
 realtime_vr_keypoints : False

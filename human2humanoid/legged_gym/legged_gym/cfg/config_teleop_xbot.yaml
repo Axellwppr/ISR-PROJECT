@@ -6,7 +6,7 @@ defaults:
   - domain_rand: domain_rand_teleop
   - env: env_teleop
   - init_state: init_state_teleop
-  - motion: motion_teleop
+  - motion: motion_full
   - noise: noise_teleop
   - normalization: normalization_teleop
   - train: ppo_teleop
