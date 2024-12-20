@@ -24,3 +24,5 @@ __pycache__/*
 
 *.pkl
 .hydra/
+
+.ipynb_checkpoints/
