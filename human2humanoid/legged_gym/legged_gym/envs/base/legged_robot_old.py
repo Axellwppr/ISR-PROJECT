@@ -3201,7 +3201,7 @@ class LeggedRobot(BaseTask):
                 self.root_states[env_ids, :3] = motion_res["root_pos"][env_ids]
                 # print("root",motion_res['root_pos'][env_ids])
                 # self.root_states[env_ids, 2] += 0.03 # in case under the terrain
-                self.root_states[env_ids, 2] += 0.08  # in case under the terrain
+                self.root_states[env_ids, 2] += 0.04  # in case under the terrain
 
                 # self.root_states[env_ids, 0] += 5.0 # in case under the terrain
                 # self.root_states[env_ids, 1] += 5.0 # in case under the terrain

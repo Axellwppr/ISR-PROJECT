@@ -4,7 +4,7 @@ recycle_motion : True
 terrain_level_down_distance : 0.5
 num_markers : 28
 
-motion_file : 'resources/motions/xbot/amass_all_merged_optimized.pkl'
+motion_file : 'resources/motions/xbot/amass_with_ik_refined_offset.pkl'
 skeleton_file : 'resources/robots/rel2/urdf/rel2.xml'
 marker_file : 'resources/objects/Marker/traj_marker.urdf'
 num_dof_pos_reference : 28
