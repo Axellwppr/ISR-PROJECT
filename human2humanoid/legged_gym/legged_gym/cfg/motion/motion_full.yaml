@@ -42,7 +42,7 @@ teleop_selected_keypoints_names : ['base_link', 'left_shoulder_pitch_link', 'lef
 
 
 resample_motions_for_envs : True
-resample_motions_for_envs_interval_s : 100000
+resample_motions_for_envs_interval_s : 10000
 
 
 visualize_config:

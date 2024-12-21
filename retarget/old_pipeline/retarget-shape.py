@@ -56,7 +56,7 @@ def plot_keypoints(robot_points, smpl_points, iteration, save_dir="plots"):
 # 1. 加载SMPL模型
 # ================================
 device = torch.device("cpu")
-smpl_parser = SMPL_Parser(model_path="data/smpl", gender="neutral")
+smpl_parser = SMPL_Parser(model_path="../../human2humanoid/data/smpl", gender="neutral")
 
 # 定义一个SMPL标准站姿姿态
 pose_aa_stand = torch.zeros((1, 72))
@@ -169,9 +169,9 @@ for iteration in range(1000):
     optimizer.step()
 
 # 优化完成后保存结果
-os.makedirs("data/new_robot", exist_ok=True)
+os.makedirs("../../human2humanoid/data/new_robot", exist_ok=True)
 joblib.dump(
     (shape_new.detach().cpu(), scale.detach().cpu()),
-    "data/new_robot/shape_optimized.pkl",
+    "../../human2humanoid/data/new_robot/shape_optimized.pkl",
 )
 print("Shape fitting completed and saved to data/new_robot/shape_optimized.pkl")

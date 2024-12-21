@@ -236,7 +236,7 @@ class LeggedRobot(BaseTask):
                     self.cfg.train.distill_model_config.num_traj_samples
                 )
                 self.cfg.motion.teleop_selected_keypoints_names = (
-                    self.cfg.train.distill_model_config.teleop_selected_keypoints_names
+                    self.cfg.motion.teleop_selected_keypoints_names_distill
                 )
                 self.cfg.env.num_privileged_obs = (
                     self.cfg.train.distill_model_config.num_privileged_obs
@@ -251,6 +251,8 @@ class LeggedRobot(BaseTask):
                 ]
                 self._track_bodies_extend_id = _track_bodies_extend_id_new
                 self.add_noise = False
+                
+                # breakpoint()
 
                 full_obs, full_privilaged_obs = self.compute_self_and_task_obs()
                 gt_actions = self.expert_policy(full_obs)
@@ -1848,6 +1850,7 @@ class LeggedRobot(BaseTask):
 
                 if self.cfg.asset.clip_motion_goal:
                     # import ipdb; ipdb.set_trace()
+                    # breakpoint()
                     ref_head = ref_rb_pos_subset[:, 2]
                     body_xyz = self.root_states[:, :3]
                     direction_to_body = body_xyz - ref_head
@@ -3179,6 +3182,11 @@ class LeggedRobot(BaseTask):
         """
         # base position
         # print("resets")
+        if motion.realtime_vr_keypoints:
+            self.root_states[env_ids, :3] = self.realtime_vr_keypoints_pos
+            self.root_states[env_ids, 3:7] = self.realtime_vr_keypoints_rot
+            self.root_states[env_ids, 7:10] = self.realtime_vr_keypoints_vel
+            self.root_states[env_ids, 10:13] = self.realtime_vr_keypoints_ang_vel
         if self.custom_origins:  # trimesh
             if self.cfg.motion.teleop:
                 # breakpoint()

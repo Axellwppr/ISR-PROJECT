@@ -489,7 +489,7 @@
   </link>
   <joint
     name="left_arm_yaw_joint"
-    type="revolute">
+    type="fixed">
     <origin
       xyz="0 -0.1905 0"
       rpy="1.5708 -1.5708 0" />
@@ -733,7 +733,7 @@
   </link>
   <joint
     name="left_wrist_yaw_joint"
-    type="revolute">
+    type="fixed">
     <origin
       xyz="0 0 0"
       rpy="1.5708 0 0" />
@@ -970,7 +970,7 @@
   </link>
   <joint
     name="right_arm_yaw_joint"
-    type="revolute">
+    type="fixed">
     <origin
       xyz="0 -0.1905 0"
       rpy="1.5708 1.5708 0" />
@@ -1214,7 +1214,7 @@
   </link>
   <joint
     name="right_wrist_yaw_joint"
-    type="revolute">
+    type="fixed">
     <origin
       xyz="0 0 0"
       rpy="1.5708 0 0" />

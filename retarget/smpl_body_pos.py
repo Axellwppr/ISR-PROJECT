@@ -1,25 +1,3 @@
-smpl_joint_pick = [
-    "L_Knee",
-    "L_Ankle",
-    "R_Knee",
-    "R_Ankle",
-    "L_Elbow",
-    "L_Hand",
-    "R_Elbow",
-    "R_Hand",
-]
-
-new_robot_joint_pick = [
-    "left_knee_link",
-    "left_ankle_pitch_link",
-    "right_knee_link",
-    "right_ankle_pitch_link",
-    "left_arm_yaw_link",
-    "left_hand_ee_link",
-    "right_arm_yaw_link",
-    "right_hand_ee_link",
-]
-
 import glob
 import os
 import sys
@@ -39,6 +17,7 @@ from utils import (
     compute_rotation_matrix,
     plot_dynamic_points,
 )
+from link_trans import smpl_joint_pick, new_robot_joint_pick
 
 def load_amass_data(data_path):
     entry_data = dict(np.load(open(data_path, "rb"), allow_pickle=True))
@@ -73,6 +52,12 @@ if __name__ == "__main__":
     scale = scale.to(device)
     
     smpl_joint_pick_idx = [SMPL_BONE_ORDER_NAMES.index(j) for j in smpl_joint_pick]
+    
+    smpl_joint_shoulder = [
+        SMPL_BONE_ORDER_NAMES.index("L_Shoulder"),
+        SMPL_BONE_ORDER_NAMES.index("R_Shoulder")
+    ]
+        
     
     amass_root = "/home/axell/desktop/11-30-ISR-PROJ/human2humanoid/data/AMASS"
     all_pkls = glob.glob(f"{amass_root}/**/*.npz", recursive=True)
@@ -133,14 +118,18 @@ if __name__ == "__main__":
         root_pos_opt = joints_opt[:, 0].unsqueeze(1)
         scaled_joints_opt = (joints_opt - root_pos_opt) * scale
         
-        target_smpl_pos = scaled_joints_opt[
-            :, smpl_joint_pick_idx
-        ]  # Shape: (N, len, 3)
-        
-        target_smpl_pos = target_smpl_pos.detach().cpu().numpy()
-        
+        target_smpl_pos = scaled_joints_opt.detach().cpu().numpy()
         target_smpl_pos = np.einsum('tij,tnj->tni', root_rot_quat.inv().as_matrix(), target_smpl_pos)
-        plot_dynamic_points(target_smpl_pos, target_smpl_pos)
+        
+        target_smpl_shoulder = target_smpl_pos[:, smpl_joint_shoulder]
+        target_smpl_pos = target_smpl_pos[: , smpl_joint_pick_idx]
+        
+        shoulder_offset = target_smpl_shoulder.mean(axis=1)[:, None, :] - np.array([[[0, 0, 0.2885]]])
+        # breakpoint()
+        target_smpl_pos[:, 4:, :] -= shoulder_offset
+        
+        
+        # plot_dynamic_points(target_smpl_pos, target_smpl_pos)
         
         data_dump[data_key] = {
             "smpl_pos": target_smpl_pos,
