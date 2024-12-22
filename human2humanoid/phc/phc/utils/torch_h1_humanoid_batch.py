@@ -177,13 +177,14 @@ class Humanoid_Batch:
                 return_dict.dof_pos = dof_gt
             else:
                 print("Warning: No ground truth provided for dof, calc from the input")
-                if self.extend_hand or self.extend_head:
-                    return_dict.dof_pos = pose.sum(dim = -1)[..., 1:][..., :-self._remove_idx] # you can sum it up since unitree's each joint has 1 dof. Last two are for hands. doesn't really matter. 
-                else:
-                    return_dict.dof_pos = pose.sum(dim = -1)[..., 1:] # you can sum it up since unitree's each joint has 1 dof. Last two are for hands. doesn't really matter. 
-
-            dof_vel = ((return_dict.dof_pos[:, 1:] - return_dict.dof_pos[:, :-1] )/dt)
-            return_dict.dof_vels = torch.cat([dof_vel, dof_vel[:, -2:-1]], dim = 1)
+                raise NotImplementedError("This part is not implemented yet")
+                # if self.extend_hand or self.extend_head:
+                #     return_dict.dof_pos = pose.sum(dim = -1)[..., 1:][..., :-self._remove_idx] # you can sum it up since unitree's each joint has 1 dof. Last two are for hands. doesn't really matter. 
+                # else:
+                #     return_dict.dof_pos = pose.sum(dim = -1)[..., 1:] # you can sum it up since unitree's each joint has 1 dof. Last two are for hands. doesn't really matter. 
+            # breakpoint()
+            dof_vel = ((return_dict.dof_pos[1:, :] - return_dict.dof_pos[:-1, :] )/dt)
+            return_dict.dof_vels = torch.cat([dof_vel, dof_vel[-2:-1, :]], dim = 0)
             return_dict.fps = int(1/dt)
 
         return return_dict

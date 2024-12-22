@@ -5569,7 +5569,6 @@ class LeggedRobot(BaseTask):
             -diff_dof_pos_dist / self.cfg.rewards.teleop_joint_pos_sigma
         )
         return r_dof_pos
-
     def _reward_teleop_selected_joint_position(self):
         dof_pos = self.dof_pos
 
@@ -5584,6 +5583,14 @@ class LeggedRobot(BaseTask):
         ref_dof_pos = motion_res["dof_pos"]
 
         diff_dof_pos = ref_dof_pos - dof_pos
+        # print(ref_dof_pos)
+        # if not hasattr(self, "last_ref_dof_pos"):  # 检查属性是否存在
+        #     self.last_ref_dof_pos = ref_dof_pos  # 初始化属性
+        # else:
+        #     vel = (ref_dof_pos - self.last_ref_dof_pos) / self.dt
+        #     print(vel)
+
+        # self.last_ref_dof_pos = ref_dof_pos
         # scale the diff by self.cfg.rewards.teleop_joint_pos_selection
         for joint_name, scale in self.cfg.rewards.teleop_joint_pos_selection.items():
             # breakpoint()
@@ -5655,6 +5662,8 @@ class LeggedRobot(BaseTask):
         ref_dof_vel = motion_res["dof_vel"]
 
         diff_dof_vel = ref_dof_vel - dof_vel
+        # print(diff_dof_vel)
+        
         # scale the diff by self.cfg.rewards.teleop_joint_pos_selection
         for joint_name, scale in self.cfg.rewards.teleop_joint_pos_selection.items():
             joint_index = self.dof_names.index(joint_name)
