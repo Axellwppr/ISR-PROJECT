@@ -26,3 +26,5 @@ __pycache__/*
 .hydra/
 
 .ipynb_checkpoints/
+
+jix22/
