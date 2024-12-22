@@ -3204,7 +3204,7 @@ class LeggedRobot(BaseTask):
                 self.root_states[env_ids, :3] = motion_res["root_pos"][env_ids]
                 # print("root",motion_res['root_pos'][env_ids])
                 # self.root_states[env_ids, 2] += 0.03 # in case under the terrain
-                self.root_states[env_ids, 2] += 0.0  # in case under the terrain
+                self.root_states[env_ids, 2] += 0.05  # in case under the terrain
 
                 # self.root_states[env_ids, 0] += 5.0 # in case under the terrain
                 # self.root_states[env_ids, 1] += 5.0 # in case under the terrain
@@ -5949,6 +5949,7 @@ class LeggedRobot(BaseTask):
         )
         # print(body_rot, ref_body_rot, diff_global_body_rot)
         diff_global_body_angle = torch_utils.quat_to_angle_axis(diff_global_body_rot)[0]
+        # print(diff_global_body_angle)
         diff_global_body_angle_dist = (diff_global_body_angle**2).mean(dim=-1)
         r_body_rot = torch.exp(
             -diff_global_body_angle_dist / self.cfg.rewards.teleop_body_rot_sigma
@@ -6003,9 +6004,17 @@ class LeggedRobot(BaseTask):
         return r_body_rot
 
     def _reward_teleop_selected_body_rotation(self):
-        raise NotImplementedError
         body_rot = self._rigid_body_rot
-        ref_body_rot = ref_body_rot
+        
+        offset = self.env_origins + self.env_origins_init_3Doffset
+        motion_times = (
+            self.episode_length_buf
+        ) * self.dt + self.motion_start_times  # next frames so +1
+        # motion_res = self._get_state_from_motionlib_cache(self.motion_ids, motion_times, offset=offset)
+        motion_res = self._get_state_from_motionlib_cache_trimesh(
+            self.motion_ids, motion_times, offset=offset
+        )
+        ref_body_rot = motion_res["rb_rot"]
         diff_global_body_rot = torch_utils.quat_mul(
             ref_body_rot, torch_utils.quat_conjugate(body_rot)
         )
@@ -6020,6 +6029,7 @@ class LeggedRobot(BaseTask):
         r_body_rot = torch.exp(
             -diff_global_body_angle_dist / self.cfg.rewards.teleop_body_rot_sigma
         )
+        # print(r_body_rot)
         return r_body_rot
 
     def _reward_teleop_body_vel(self):
@@ -6091,9 +6101,19 @@ class LeggedRobot(BaseTask):
         return r_vel
 
     def _reward_teleop_selected_body_vel(self):
-        raise NotImplementedError
         body_vel = self._rigid_body_vel
-        ref_body_vel = ref_body_vel
+        
+        offset = self.env_origins + self.env_origins_init_3Doffset
+        motion_times = (
+            self.episode_length_buf
+        ) * self.dt + self.motion_start_times  # next frames so +1
+        # motion_res = self._get_state_from_motionlib_cache(self.motion_ids, motion_times, offset=offset)
+        motion_res = self._get_state_from_motionlib_cache_trimesh(
+            self.motion_ids, motion_times, offset=offset
+        )
+
+        ref_body_vel = motion_res["body_vel"]
+        
         diff_global_vel = ref_body_vel - body_vel
         track_vel_body_indices = [
             self._body_list.index(body_name)
@@ -6173,9 +6193,19 @@ class LeggedRobot(BaseTask):
         return r_ang_vel
 
     def _reward_teleop_selected_body_ang_vel(self):
-        raise NotImplementedError
         body_ang_vel = self._rigid_body_ang_vel
-        ref_body_ang_vel = ref_body_ang_vel
+
+        offset = self.env_origins + self.env_origins_init_3Doffset
+        motion_times = (
+            self.episode_length_buf
+        ) * self.dt + self.motion_start_times  # next frames so +1
+        # motion_res = self._get_state_from_motionlib_cache(self.motion_ids, motion_times, offset=offset)
+        motion_res = self._get_state_from_motionlib_cache_trimesh(
+            self.motion_ids, motion_times, offset=offset
+        )
+
+        ref_body_ang_vel = motion_res["body_ang_vel"]
+        
         diff_global_ang_vel = ref_body_ang_vel - body_ang_vel
         track_ang_vel_body_indices = [
             self._body_list.index(body_name)
