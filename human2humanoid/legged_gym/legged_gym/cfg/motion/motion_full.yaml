@@ -2,13 +2,14 @@ teleop : True
 visualize : False
 recycle_motion : True
 terrain_level_down_distance : 0.5
-num_markers : 28
+num_markers : 24
 
-motion_file : 'resources/motions/xbot/amass_with_ik_refined_offset.pkl'
-skeleton_file : 'resources/robots/rel2/urdf/rel2.xml'
+motion_file : 'resources/motions/xbot/ik_new_final_amass.pkl'
+# motion_file : 'resources/motions/xbot/ik_new_final_gen.pkl'
+skeleton_file : 'resources/robots/rel2/urdf/rel2_24dof.xml'
 marker_file : 'resources/objects/Marker/traj_marker.urdf'
-num_dof_pos_reference : 28
-num_dof_vel_reference : 28
+num_dof_pos_reference : 24
+num_dof_vel_reference : 24
 
 extend_hand: False
 extend_head: False
@@ -37,9 +38,7 @@ teleop_level_down_episode_length : 30
 teleop_obs_version : 'v-teleop-extend-max-full'
 # teleop_obs_version : 'v-teleop-extend-max-nolinvel'
 # teleop_obs_version : 'v-min2'
-teleop_selected_keypoints_names : ['base_link', 'left_shoulder_pitch_link', 'left_shoulder_roll_link', 'left_arm_yaw_link', 'left_elbow_pitch_link', 'left_elbow_yaw_link', 'left_wrist_roll_link', 'left_wrist_yaw_link', 'right_shoulder_pitch_link', 'right_shoulder_roll_link', 'right_arm_yaw_link', 'right_elbow_pitch_link', 'right_elbow_yaw_link', 'right_wrist_roll_link', 'right_wrist_yaw_link', 'waist_yaw_link', 'waist_roll_link', 'left_leg_roll_link', 'left_leg_yaw_link', 'left_leg_pitch_link', 'left_knee_link', 'left_ankle_pitch_link', 'left_ankle_roll_link', 'right_leg_roll_link', 'right_leg_yaw_link', 'right_leg_pitch_link', 'right_knee_link', 'right_ankle_pitch_link', 'right_ankle_roll_link']
-#[ 'pelvis',  'left_hip_yaw_link', 'left_hip_roll_link','left_hip_pitch_link', 'left_knee_link', 'left_ankle_link', 'right_hip_yaw_link', 'right_hip_roll_link', 'right_hip_pitch_link', 'right_knee_link', 'right_ankle_link', 'torso_link', 'left_shoulder_pitch_link', 'left_shoulder_roll_link', 'left_shoulder_yaw_link', 'left_elbow_link',  'right_shoulder_pitch_link', 'right_shoulder_roll_link', 'right_shoulder_yaw_link', 'right_elbow_link']
-
+teleop_selected_keypoints_names : ['base_link', 'left_shoulder_pitch_link', 'left_shoulder_roll_link', 'left_elbow_pitch_link', 'left_elbow_yaw_link', 'left_wrist_roll_link', 'right_shoulder_pitch_link', 'right_shoulder_roll_link', 'right_elbow_pitch_link', 'right_elbow_yaw_link', 'right_wrist_roll_link', 'waist_yaw_link', 'waist_roll_link', 'left_leg_roll_link', 'left_leg_yaw_link', 'left_leg_pitch_link', 'left_knee_link', 'left_ankle_pitch_link', 'left_ankle_roll_link', 'right_leg_roll_link', 'right_leg_yaw_link', 'right_leg_pitch_link', 'right_knee_link', 'right_ankle_pitch_link', 'right_ankle_roll_link']
 
 resample_motions_for_envs : True
 resample_motions_for_envs_interval_s : 10000

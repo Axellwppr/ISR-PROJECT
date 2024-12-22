@@ -35,18 +35,7 @@ if __name__ == "__main__":
         SMPL_BONE_ORDER_NAMES.index("L_Shoulder"),
         SMPL_BONE_ORDER_NAMES.index("R_Shoulder")
     ]
-    amass_data_seg = joblib.load("./data/train_diffusion_manip_window_120_cano_joints24.p")
     amass_data = joblib.load("./data/train_diffusion_manip_seq_joints24.p")
-    
-    # root_trans_gt = {}
-    
-    # for data_key in amass_data_seg.keys():
-    #     data = amass_data_seg[data_key]
-    #     name = data["seq_name"]
-    #     if name not in root_trans_gt:
-    #         root_trans_gt[name] = []
-    #     breakpoint()
-    #     root_trans_gt[name].append(data["motion"][:, :3])
 
     pbar = tqdm(amass_data.keys())
     
@@ -56,27 +45,14 @@ if __name__ == "__main__":
     
     for data_key in pbar:
         data = amass_data[data_key]
-        
-        # root_trans_segs = root_trans_gt[data["seq_name"]]
-        
-        # for i in range(1, len(root_trans_segs)):
-        #     breakpoint()
-        #     root_trans_segs[i] += root_trans_segs[i-1][-1][:, None]
-        
-        # root_trans = np.concatenate(root_trans_segs, axis=0)
-        # j_gpos = data["motion"][:, :72].reshape(-1, 24, 3)
-        # plot_dynamic_points(j_gpos, j_gpos)
-        
-        # continue
-        # breakpoint()
 
         skip = 1
         root_trans = data["trans"]
-        ofst = root_trans[0:1, :].copy()
-        ofst[:, 2] = 0
-        root_trans -= ofst
-        ofst = data["trans2joint"][None,:]
-        root_trans -= ofst
+        # ofst = root_trans[0:1, :].copy()
+        # ofst[:, 2] = 0
+        # root_trans -= ofst
+        # ofst = data["trans2joint"][None,:]
+        # root_trans -= ofst
         root_rot = data["root_orient"]
         pose_body = data["pose_body"]
         
@@ -107,20 +83,20 @@ if __name__ == "__main__":
         
         # 将SMPL关节缩放
         root_pos_opt = joints_opt[:, 0].unsqueeze(1)
-        scaled_joints_opt = (joints_opt - root_pos_opt) * scale + trans.unsqueeze(1)
+        scaled_joints_opt = (joints_opt - root_pos_opt) * scale
         
         target_smpl_pos = scaled_joints_opt.detach().cpu().numpy()
         target_smpl_pos = np.einsum('tij,tnj->tni', root_rot_quat.inv().as_matrix(), target_smpl_pos)
         
         target_smpl_shoulder = target_smpl_pos[:, smpl_joint_shoulder]
-        target_smpl_pos = target_smpl_pos[: , smpl_joint_pick_idx]
+        target_smpl_pos = target_smpl_pos[: , smpl_joint_pick_idx] #+ root_pos_opt.detach().cpu().numpy()
         
         shoulder_offset = target_smpl_shoulder.mean(axis=1)[:, None, :] - np.array([[[0, 0, 0.2885]]])
         # breakpoint()
-        # target_smpl_pos[:, 4:, :] -= shoulder_offset
+        target_smpl_pos[:, 4:, :] -= shoulder_offset
         
         
-        plot_dynamic_points(target_smpl_pos, target_smpl_pos)
+        # plot_dynamic_points(target_smpl_pos, target_smpl_pos)
         
         data_dump[data["seq_name"]] = {
             "smpl_pos": target_smpl_pos,
@@ -129,4 +105,4 @@ if __name__ == "__main__":
             "fps": 30,
         }
         
-    # joblib.dump(data_dump,"./amass_pos.pkl")
+    joblib.dump(data_dump,"./gen_pos.pkl")

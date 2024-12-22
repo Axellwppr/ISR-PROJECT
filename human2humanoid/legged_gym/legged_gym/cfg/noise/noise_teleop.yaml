@@ -1,5 +1,5 @@
 ### For noise, do not use the defaults from noise_base.yaml. 
-add_noise : True # False for teleop sim right now
+add_noise : False # False for teleop sim right now
 noise_level : 1.0 # scales other values
 noise_scales:
     base_z : 0.05

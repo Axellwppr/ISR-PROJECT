@@ -74,7 +74,8 @@ def refine_ik_results(
     return best_dof.cpu().numpy()
 
 if __name__ == "__main__":
-    data = joblib.load("amass_pos.pkl")
+    # data = joblib.load("amass_pos.pkl")
+    data = joblib.load("gen_pos.pkl")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -130,4 +131,5 @@ if __name__ == "__main__":
         data[key]["ik_refined"] = refined_all[start_idx:start_idx + seq_len]
         start_idx += seq_len
 
-    joblib.dump(data, "amass_IK_new.pkl")
+    # joblib.dump(data, "amass_IK_new.pkl")
+    joblib.dump(data, "gen_IK_new.pkl")

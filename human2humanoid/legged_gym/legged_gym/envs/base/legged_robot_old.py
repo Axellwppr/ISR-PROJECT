@@ -39,9 +39,9 @@ import torch.optim as optim
 
 xy_axis = [0, 1]
 z_axis = [2]
-upper_body_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-lower_body_ids = [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
-vr3keypoint_ids = [0, 7, 14]
+upper_body_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+lower_body_ids = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+vr3keypoint_ids = [0, 5, 10]
 base_id = 0
 
 class LeggedRobot(BaseTask):
@@ -84,15 +84,15 @@ class LeggedRobot(BaseTask):
             self.freeze_motion_res = motion_res.copy()
         self._prepare_reward_function()
         self.init_done = True
-        self.trajectories = torch.zeros(self.num_envs, 90 * 100).to(
+        self.trajectories = torch.zeros(self.num_envs, 78 * 100).to(
             self.device
         )  # 19dof + 19dofvel + 3angular velocity + 4projectedgravity + 19lastaction
-        self.trajectories_with_linvel = torch.zeros(self.num_envs, 93 * 100).to(
+        self.trajectories_with_linvel = torch.zeros(self.num_envs, 81 * 100).to(
             self.device
         )  # 19dof + 19dofvel + 3angular velocity + 4projectedgravity + 19lastaction
         if self.cfg.train_velocity_estimation:
-            # self.velocity_estimator = VelocityEstimator(90, 512, 256, 3, 25).to(self.device)
-            self.velocity_estimator = VelocityEstimatorGRU(90, 512, 3).to(self.device)
+            # self.velocity_estimator = VelocityEstimator(78, 512, 256, 3, 25).to(self.device)
+            self.velocity_estimator = VelocityEstimatorGRU(78, 512, 3).to(self.device)
 
             self.velocity_optimizer = optim.Adam(
                 self.velocity_estimator.parameters(), lr=0.00001
@@ -104,7 +104,7 @@ class LeggedRobot(BaseTask):
                 "logs/velocity_orand",
                 "velocity_estimator_33000.pt",
             )
-            self.velocity_estimator = VelocityEstimator(90, 512, 256, 3, 25).to(
+            self.velocity_estimator = VelocityEstimator(78, 512, 256, 3, 25).to(
                 self.device
             )
             self.velocity_estimator.load_state_dict(torch.load(load_path))
@@ -357,17 +357,17 @@ class LeggedRobot(BaseTask):
         current_obs_a = torch.cat(
             (dof, dof_vel, base_ang_vel, base_gravity, actions), dim=1
         )
-        self.trajectories[:, 1 * 90 :] = self.trajectories[:, : -1 * 90].clone()
-        self.trajectories[:, 0 * 90 : 1 * 90] = current_obs_a.clone()
+        self.trajectories[:, 1 * 78 :] = self.trajectories[:, : -1 * 78].clone()
+        self.trajectories[:, 0 * 78 : 1 * 78] = current_obs_a.clone()
 
         lin_vel = self.base_lin_vel
         current_obs_a_with_linvel = torch.cat(
             (dof, dof_vel, lin_vel, base_ang_vel, base_gravity, actions), dim=1
         )
-        self.trajectories_with_linvel[:, 1 * 93 :] = self.trajectories_with_linvel[
-            :, : -1 * 93
+        self.trajectories_with_linvel[:, 1 * 81 :] = self.trajectories_with_linvel[
+            :, : -1 * 81
         ].clone()
-        self.trajectories_with_linvel[:, 0 * 93 : 1 * 93] = (
+        self.trajectories_with_linvel[:, 0 * 81 : 1 * 81] = (
             current_obs_a_with_linvel.clone()
         )
         if self.cfg.train_velocity_estimation:
@@ -380,15 +380,15 @@ class LeggedRobot(BaseTask):
             train_input = self.trajectories[self.ready_for_train_indices]
 
             # GRU
-            # Reshape A into the desired shape (num_envs, 25, 90)
-            # B_reshaped = train_input.reshape(train_input.shape[0], 25, 90)
-            B_reshaped = train_input.reshape(train_input.shape[0], 25, 90)
+            # Reshape A into the desired shape (num_envs, 25, 78)
+            # B_reshaped = train_input.reshape(train_input.shape[0], 25, 78)
+            B_reshaped = train_input.reshape(train_input.shape[0], 25, 78)
 
             # Transpose the reshaped array to match the desired rearrangement of axes
             # B_transposed = B_reshaped.transpose(0, 2, 1)
 
             # Assign the values of the transposed array back to B
-            # train_input = current_obs_a.unsqueeze(0).clone() # [batch_size, 90]
+            # train_input = current_obs_a.unsqueeze(0).clone() # [batch_size, 78]
             train_input = torch.flip(B_reshaped, dims=[1])
 
             if train_input.shape[0] > 0:
@@ -1593,7 +1593,7 @@ class LeggedRobot(BaseTask):
                 if self.cfg.env.add_short_history:
                     assert self.cfg.env.short_history_length > 0
                     history_to_be_append = self.trajectories[
-                        :, 0 : self.cfg.env.short_history_length * 90
+                        :, 0 : self.cfg.env.short_history_length * 78
                     ]
                     obs = torch.cat(
                         [
@@ -1777,7 +1777,7 @@ class LeggedRobot(BaseTask):
                 if self.cfg.env.add_short_history:
                     assert self.cfg.env.short_history_length > 0
                     history_to_be_append = self.trajectories_with_linvel[
-                        :, 0 : self.cfg.env.short_history_length * 93
+                        :, 0 : self.cfg.env.short_history_length * 81
                     ]
                     obs = torch.cat(
                         [
@@ -1973,7 +1973,7 @@ class LeggedRobot(BaseTask):
                 if self.cfg.env.add_short_history:
                     assert self.cfg.env.short_history_length > 0
                     history_to_be_append = self.trajectories[
-                        :, 0 : self.cfg.env.short_history_length * 90
+                        :, 0 : self.cfg.env.short_history_length * 78
                     ]
                     obs = torch.cat(
                         [
@@ -2003,7 +2003,7 @@ class LeggedRobot(BaseTask):
 
                 if self.cfg.use_velocity_estimation:
                     self.ready_for_train_indices = self.episode_length_buf > 25
-                    current_obs_a = self.trajectories[self.ready_for_train_indices, :90]
+                    current_obs_a = self.trajectories[self.ready_for_train_indices, :78]
                     if current_obs_a.shape[0] > 0:
                         raise NotImplementedError
                         estimate_velocity = self.velocity_estimator(
@@ -2173,7 +2173,7 @@ class LeggedRobot(BaseTask):
                 if self.cfg.env.add_short_history:
                     assert self.cfg.env.short_history_length > 0
                     history_to_be_append = self.trajectories[
-                        :, 0 : self.cfg.env.short_history_length * 90
+                        :, 0 : self.cfg.env.short_history_length * 78
                     ]
                     obs = torch.cat(
                         [
@@ -2203,7 +2203,7 @@ class LeggedRobot(BaseTask):
 
                 if self.cfg.use_velocity_estimation:
                     self.ready_for_train_indices = self.episode_length_buf > 25
-                    current_obs_a = self.trajectories[self.ready_for_train_indices, :90]
+                    current_obs_a = self.trajectories[self.ready_for_train_indices, :78]
                     if current_obs_a.shape[0] > 0:
                         raise NotImplementedError
                         estimate_velocity = self.velocity_estimator(
@@ -3182,11 +3182,6 @@ class LeggedRobot(BaseTask):
         """
         # base position
         # print("resets")
-        if motion.realtime_vr_keypoints:
-            self.root_states[env_ids, :3] = self.realtime_vr_keypoints_pos
-            self.root_states[env_ids, 3:7] = self.realtime_vr_keypoints_rot
-            self.root_states[env_ids, 7:10] = self.realtime_vr_keypoints_vel
-            self.root_states[env_ids, 10:13] = self.realtime_vr_keypoints_ang_vel
         if self.custom_origins:  # trimesh
             if self.cfg.motion.teleop:
                 # breakpoint()
@@ -3209,7 +3204,7 @@ class LeggedRobot(BaseTask):
                 self.root_states[env_ids, :3] = motion_res["root_pos"][env_ids]
                 # print("root",motion_res['root_pos'][env_ids])
                 # self.root_states[env_ids, 2] += 0.03 # in case under the terrain
-                self.root_states[env_ids, 2] += 0.04  # in case under the terrain
+                self.root_states[env_ids, 2] += 0.0  # in case under the terrain
 
                 # self.root_states[env_ids, 0] += 5.0 # in case under the terrain
                 # self.root_states[env_ids, 1] += 5.0 # in case under the terrain
@@ -3230,7 +3225,7 @@ class LeggedRobot(BaseTask):
                 self.root_states[env_ids, 7:10] = motion_res["root_vel"][
                     env_ids
                 ] # ZL: use random velicty initation should be more robust?
-                self.root_states[env_ids, 10:13] = motion_res["root_ang_vel"][env_ids]
+                self.root_states[env_ids, 10:13] = motion_res["root_ang_vel"][env_ids]# * 0.0
 
                 # breakpoint()
 
@@ -3268,6 +3263,7 @@ class LeggedRobot(BaseTask):
                 self._rigid_body_rot[env_ids] = motion_res["rb_rot"][env_ids]
                 self._rigid_body_vel[env_ids] = motion_res["body_vel"][env_ids]
                 self._rigid_body_ang_vel[env_ids] = motion_res["body_ang_vel"][env_ids]
+                # self._rigid_body_ang_vel[env_ids, :3] = 0.0
                 # breakpoint()
             else:
                 self.root_states[env_ids] = self.base_init_state

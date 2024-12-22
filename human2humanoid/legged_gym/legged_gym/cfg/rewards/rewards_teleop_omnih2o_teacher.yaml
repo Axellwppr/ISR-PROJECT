@@ -89,18 +89,18 @@ teleop_body_ang_vel_selection : ['base_link']
 teleop_joint_pos_selection : 
   left_shoulder_pitch_joint: 2.0
   left_shoulder_roll_joint: 2.0
-  left_arm_yaw_joint: 2.0
+  # left_arm_yaw_joint: 2.0
   left_elbow_pitch_joint: 2.0
   left_elbow_yaw_joint: 2.0
   left_wrist_roll_joint: 2.0
-  left_wrist_yaw_joint: 2.0
+  # left_wrist_yaw_joint: 2.0
   right_shoulder_pitch_joint: 2.0
   right_shoulder_roll_joint: 2.0
-  right_arm_yaw_joint: 2.0
+  # right_arm_yaw_joint: 2.0
   right_elbow_pitch_joint: 2.0
   right_elbow_yaw_joint: 2.0
   right_wrist_roll_joint: 2.0
-  right_wrist_yaw_joint: 2.0
+  # right_wrist_yaw_joint: 2.0
   waist_yaw_joint: 0.5
   waist_roll_joint: 0.5
   left_leg_roll_joint: 0.5
