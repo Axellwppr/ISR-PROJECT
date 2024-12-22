@@ -6,7 +6,7 @@ num_markers : 24
 
 
 # motion_file : 'resources/motions/h1/amass_phc_filtered.pkl'
-motion_file : 'resources/motions/xbot/amass_with_ik_refined_offset.pkl'
+motion_file : 'resources/motions/xbot/ik_new_final_amass_gen.pkl'
 skeleton_file : 'resources/robots/rel2/urdf/rel2_24dof.xml'
 marker_file : 'resources/objects/Marker/traj_marker.urdf'
 num_dof_pos_reference : 24
