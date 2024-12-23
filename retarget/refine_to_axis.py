@@ -32,7 +32,8 @@ for idx, joint in enumerate(joint_data):
 rotate_axis = torch.stack(rotate_axis, dim=0).cpu().numpy()
 
 if __name__ == "__main__":
-    data = joblib.load("gen_IK_new.pkl")
+    data = joblib.load("amass_IK_new.pkl")
+    # data = joblib.load("gen_IK_new.pkl")
     filter_keys = list(data.keys())
     
     pbar = tqdm(filter_keys, desc="merge data")
@@ -57,7 +58,7 @@ if __name__ == "__main__":
         
         robot_positions_rot = np.einsum('tij,tnj->tni', root_rot.as_matrix(), robot_positions) + amass_data["root_trans"][:, None, :]
         
-        z_offset = robot_positions_rot[:, :, 2].min().item() - 0.05
+        z_offset = robot_positions_rot[:, :, 2].min().item()
         
         # breakpoint()
         
@@ -78,6 +79,6 @@ if __name__ == "__main__":
         
         # break
     
-    # joblib.dump(data_new, "ik_new_final_amass.pkl")
-    joblib.dump(data_new, "ik_new_final_gen.pkl")
+    joblib.dump(data_new, "ik_new_final_amass.pkl")
+    # joblib.dump(data_new, "ik_new_final_gen.pkl")
         
