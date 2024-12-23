@@ -316,7 +316,7 @@ class LeggedRobot(BaseTask):
             # self.torques[:, :] = 0
             # print(self.torques)
             self.gym.set_dof_position_target_tensor(
-                self.sim, gymtorch.unwrap_tensor(actions * self.cfg.control.action_scale)
+                self.sim, gymtorch.unwrap_tensor(actions * self.cfg.control.action_scale + self.default_dof_pos)
             )
             # self.gym.set_dof_actuation_force_tensor(
             #     self.sim, gymtorch.unwrap_tensor(self.torques)
