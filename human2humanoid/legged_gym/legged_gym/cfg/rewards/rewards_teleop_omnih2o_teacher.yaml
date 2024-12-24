@@ -122,7 +122,7 @@ reward_position_sigma_level_up_threshold: 50
 reward_position_sigma_level_down_threshold: 120
 
 penalty_curriculum: True
-penalty_scale : 0.5
+penalty_scale : 0.25
 penalty_scale_range: [0.25, 1.0]
 penalty_level_down_threshold: 50
 penalty_level_up_threshold: 120

@@ -4,7 +4,7 @@ recycle_motion : True
 terrain_level_down_distance : 0.5
 num_markers : 24
 
-motion_file : 'resources/motions/xbot/ik_new_final_amass_lower.pkl'
+motion_file : 'resources/motions/xbot/ik_new_final_amass_gen.pkl'
 # motion_file : 'resources/motions/xbot/ik_new_final_amass.pkl'
 skeleton_file : 'resources/robots/rel2/urdf/rel2_24dof.xml'
 marker_file : 'resources/objects/Marker/traj_marker.urdf'

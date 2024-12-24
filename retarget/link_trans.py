@@ -35,13 +35,11 @@ new_robot_joint_pick = [
 joint_enable = [
     "left_shoulder_pitch_joint",
     "left_shoulder_roll_joint",
-    # "left_arm_yaw_joint",
     "left_elbow_pitch_joint",
     "left_elbow_yaw_joint",
     "left_wrist_roll_joint",
     "right_shoulder_pitch_joint",
     "right_shoulder_roll_joint",
-    # "right_arm_yaw_joint",
     "right_elbow_yaw_joint",
     "right_elbow_pitch_joint",
     "right_wrist_roll_joint",
@@ -55,16 +53,23 @@ joint_enable = [
     "right_knee_joint",
 ]
 
-# import pytorch_kinematics as pk
-
-# with open(
-#     "/home/axell/desktop/humanoid/humanoid-benchmark-main/isaacLab/manipulation/assets/urdf/rel2/urdf/rel2.urdf",
-#     "rb",
-# ) as f:
-#     urdf_str = f.read()
-
-# chain = pk.build_chain_from_urdf(urdf_str)
-
-# all_joint_names = chain.get_joint_parameter_names()
-
-# joint_enable_idx = [all_joint_names.index(j) for j in joint_enable]
+joint_mirror = [
+    "right_shoulder_pitch_joint",
+    "right_shoulder_roll_joint",
+    "right_elbow_pitch_joint",
+    "right_elbow_yaw_joint",
+    "right_wrist_roll_joint",
+    "left_shoulder_pitch_joint",
+    "left_shoulder_roll_joint",
+    "left_elbow_yaw_joint",
+    "left_elbow_pitch_joint",
+    "left_wrist_roll_joint",
+    "waist_yaw_joint",
+    "waist_roll_joint",
+    "right_leg_roll_joint",
+    "right_leg_pitch_joint",
+    "right_knee_joint",
+    "left_leg_roll_joint",
+    "left_leg_pitch_joint",
+    "left_knee_joint",
+]
