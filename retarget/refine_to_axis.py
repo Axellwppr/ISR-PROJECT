@@ -177,7 +177,7 @@ def compute_fk_and_stats(dof, root_trans, root_rot, all_stats=None):
     root_rot_mat = sRot.from_quat(root_rot).as_matrix()
     robot_positions_rot = np.einsum('tij,tnj->tni', root_rot_mat, robot_positions) + root_trans[:, None, :]
     
-    z_offset = robot_positions_rot[:, :, 2].min().item()
+    z_offset = robot_positions_rot[:, :, 2].min().item() - 0.05
     
     if all_stats is not None:
         stat = check_state(robot_positions_rot - z_offset)
@@ -202,7 +202,8 @@ def compute_fk_and_stats(dof, root_trans, root_rot, all_stats=None):
     }, robot_positions_rot, stat['height_flag']
 
 if __name__ == "__main__":
-    data = joblib.load("gen_IK_new.pkl")
+    # data = joblib.load("gen_IK_new.pkl")
+    data = joblib.load("amass_IK_new.pkl")
     filter_keys = list(data.keys())
     
     # 初始化统计数据
@@ -257,4 +258,5 @@ if __name__ == "__main__":
     # 用封装好的函数来绘制统计结果
     plot_statistics(all_stats)
     
-    joblib.dump(data_new, "ik_new_final_gen.pkl")
+    # joblib.dump(data_new, "ik_new_final_gen.pkl")
+    joblib.dump(data_new, "ik_new_final_amass.pkl")

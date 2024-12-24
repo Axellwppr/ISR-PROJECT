@@ -19,7 +19,7 @@ scales:
   orientation : -200.0
   feet_max_height_for_this_air : -2500
   teleop_selected_joint_position : 32 # 5.0
-  teleop_selected_joint_vel : 16 # 5.
+  teleop_selected_joint_vel : 0. #16 # 5.
   # teleop_selected_body_rotation: 10.0
   # teleop_selected_body_vel: 4.0
   # teleop_selected_body_ang_vel: 4.0
@@ -122,7 +122,7 @@ reward_position_sigma_level_up_threshold: 50
 reward_position_sigma_level_down_threshold: 120
 
 penalty_curriculum: True
-penalty_scale : 0.25
+penalty_scale : 0.5
 penalty_scale_range: [0.25, 1.0]
 penalty_level_down_threshold: 50
 penalty_level_up_threshold: 120
@@ -148,6 +148,5 @@ penalty_reward_names : [
   "orientation",
   "in_the_air",
   "stable_lower_when_vrclose",
-  "stable_lower_when_vrclose_positive",
-  "feet_max_height_for_this_air"
+  "stable_lower_when_vrclose_positive"
   ]

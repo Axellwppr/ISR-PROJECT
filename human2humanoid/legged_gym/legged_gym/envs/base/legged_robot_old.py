@@ -316,7 +316,7 @@ class LeggedRobot(BaseTask):
             # self.torques[:, :] = 0
             # print(self.torques)
             self.gym.set_dof_position_target_tensor(
-                self.sim, gymtorch.unwrap_tensor(actions * self.cfg.control.action_scale + self.default_dof_pos)
+                self.sim, gymtorch.unwrap_tensor(actions * self.cfg.control.action_scale)
             )
             # self.gym.set_dof_actuation_force_tensor(
             #     self.sim, gymtorch.unwrap_tensor(self.torques)
@@ -3204,7 +3204,7 @@ class LeggedRobot(BaseTask):
                 self.root_states[env_ids, :3] = motion_res["root_pos"][env_ids]
                 # print("root",motion_res['root_pos'][env_ids])
                 # self.root_states[env_ids, 2] += 0.03 # in case under the terrain
-                self.root_states[env_ids, 2] += 0.05  # in case under the terrain
+                self.root_states[env_ids, 2] += 0.0  # in case under the terrain
 
                 # self.root_states[env_ids, 0] += 5.0 # in case under the terrain
                 # self.root_states[env_ids, 1] += 5.0 # in case under the terrain
@@ -6269,7 +6269,7 @@ class LeggedRobot(BaseTask):
         first_contact = (self.feet_air_time > 0.0) * contact_filt
         self.feet_air_time += self.dt
         rew_airTime = torch.sum(
-            (self.feet_air_time - 0.4) * first_contact, dim=1
+            (self.feet_air_time - 0.25) * first_contact, dim=1
         )  # reward only on first contact with the ground
         rew_airTime *= (
             torch.norm(ref_body_vel[:, 0, :2], dim=1) > 0.1
