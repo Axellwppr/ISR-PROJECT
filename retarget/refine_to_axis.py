@@ -40,13 +40,6 @@ def check_state(positions):
     right_foot = positions[:, 4, 2]
     base_height = positions[:, 0, 2]
     
-    # check baseheight
-    thres = [0.65, 0.95]
-    
-    height_flag = True
-    if np.any(base_height < thres[0]) or np.any(base_height > thres[1]):
-        height_flag = False
-        
     threshold = 0.15  # 设置抬脚阈值(米)
     
     # 判断脚的抬起状态
@@ -70,16 +63,14 @@ def check_state(positions):
         'first_up': first_up,
         'left_up_ratio': left_up_frames / total_frames,
         'right_up_ratio': right_up_frames / total_frames,
-        'total_frames': total_frames,
-        'base_height_frames': base_height,
-        'height_flag': height_flag
+        'total_frames': total_frames
     }
 
 def plot_statistics(all_stats):
-    plt.figure(figsize=(16, 6))
+    plt.figure(figsize=(12, 6))
     
     # 先抬脚统计
-    plt.subplot(131)
+    plt.subplot(121)
     first_up_data = [[all_stats['first_up_count']['left']], 
                      [all_stats['first_up_count']['right']]]
     sns.heatmap(first_up_data, 
@@ -91,7 +82,7 @@ def plot_statistics(all_stats):
     plt.title('First Foot Up Statistics')
     
     # 抬脚时间比例
-    plt.subplot(132)
+    plt.subplot(122)
     time_ratio_data = [[all_stats['total_left_up_frames'] / all_stats['total_frames']], 
                        [all_stats['total_right_up_frames'] / all_stats['total_frames']]]
     sns.heatmap(time_ratio_data,
@@ -101,10 +92,6 @@ def plot_statistics(all_stats):
                 xticklabels=['Up Time Ratio'],
                 cmap='YlOrRd')
     plt.title('Foot Up Time Ratio')
-
-    plt.subplot(133)
-    sns.histplot(all_stats['base_height_frames'], bins=30, kde=True, color='blue')
-    plt.title('Base Height Distribution')
     
     plt.tight_layout()
     plt.savefig('feet_analysis.png')
@@ -174,10 +161,16 @@ def compute_fk_and_stats(dof, root_trans, root_rot, all_stats=None):
         dim=1,
     ).detach().cpu().numpy()
     
+    robot_positions_all = torch.stack(
+        [transforms[link_name].get_matrix()[:, :3, 3] for link_name in link_names],
+        dim=1
+    ).detach().cpu().numpy()
+    
     root_rot_mat = sRot.from_quat(root_rot).as_matrix()
     robot_positions_rot = np.einsum('tij,tnj->tni', root_rot_mat, robot_positions) + root_trans[:, None, :]
+    robot_positions_rot_all = np.einsum('tij,tnj->tni', root_rot_mat, robot_positions_all) + root_trans[:, None, :]
     
-    z_offset = robot_positions_rot[:, :, 2].min().item() - 0.05
+    z_offset = robot_positions_rot[:, :, 2].min().item()
     
     if all_stats is not None:
         stat = check_state(robot_positions_rot - z_offset)
@@ -185,7 +178,6 @@ def compute_fk_and_stats(dof, root_trans, root_rot, all_stats=None):
         all_stats['total_left_up_frames'] += stat['left_up_ratio'] * stat['total_frames']
         all_stats['total_right_up_frames'] += stat['right_up_ratio'] * stat['total_frames']
         all_stats['total_frames'] += stat['total_frames']
-        all_stats['base_height_frames'].extend(stat['base_height_frames'].tolist())  
     
     pose_aa = np.concatenate(
         [sRot.from_quat(root_rot).as_rotvec()[:, None, :],
@@ -199,11 +191,10 @@ def compute_fk_and_stats(dof, root_trans, root_rot, all_stats=None):
         "pose_aa": pose_aa,
         "root_rot": root_rot,
         "fps": 30,
-    }, robot_positions_rot, stat['height_flag']
+    }, robot_positions_rot
 
 if __name__ == "__main__":
-    # data = joblib.load("gen_IK_new.pkl")
-    data = joblib.load("amass_IK_new.pkl")
+    data = joblib.load("gen_IK_new.pkl")
     filter_keys = list(data.keys())
     
     # 初始化统计数据
@@ -211,8 +202,7 @@ if __name__ == "__main__":
         'first_up_count': {'left': 0, 'right': 0, 'none': 0},
         'total_left_up_frames': 0,
         'total_right_up_frames': 0,
-        'total_frames': 0,
-        'base_height_frames': []
+        'total_frames': 0
     }
     
     pbar = tqdm(filter_keys, desc="merge data")
@@ -225,16 +215,12 @@ if __name__ == "__main__":
         amass_data["root_trans"] = amass_data["root_trans"] - amass_data["root_trans"][0:1, :]
         
         # 计算原始数据的FK
-        result_orig, pos_orig, flag = compute_fk_and_stats(
+        result_orig, pos_orig = compute_fk_and_stats(
             dof, 
             amass_data["root_trans"],
             amass_data["root_rot"],
             all_stats
         )
-        
-        if not flag:
-            print(f"Invalid data: {data_key}")
-            continue
         
         # 计算镜像数据的FK
         dof_m, root_trans_m, root_rot_m = mirror_data(
@@ -243,20 +229,21 @@ if __name__ == "__main__":
             amass_data["root_rot"],
             rotate_axis
         )
-        result_mirror, pos_mirror, _ = compute_fk_and_stats(
+        result_mirror, pos_mirror = compute_fk_and_stats(
             dof_m,
             root_trans_m,
             root_rot_m,
             all_stats  # 同样更新统计信息
         )
         
-        # 保存原始数据
-        data_new[data_key] = result_orig
-        # 可选：保存镜像数据
-        data_new[f"{data_key}_mirror"] = result_mirror
+        plot_dynamic_points(pos_orig, pos_mirror)
+        
+        # # 保存原始数据
+        # data_new[data_key] = result_orig
+        # # 可选：保存镜像数据
+        # data_new[f"{data_key}_mirror"] = result_mirror
     
     # 用封装好的函数来绘制统计结果
     plot_statistics(all_stats)
     
-    # joblib.dump(data_new, "ik_new_final_gen.pkl")
-    joblib.dump(data_new, "ik_new_final_amass.pkl")
+    # joblib.dump(data_new, "ik_new_final_amass.pkl")

@@ -69,13 +69,13 @@ def refine_ik_results(
         if loss.item() < best_loss:
             best_loss = loss.item()
             best_dof = dof_pos_new.detach().clone()
-    # plot_dynamic_points((robot_positions[:,1:,:] - robot_positions[:, 0:1, :]).detach().cpu().numpy(), smpl_pos)
+    plot_dynamic_points((robot_positions[:,1:,:] - robot_positions[:, 0:1, :]).detach().cpu().numpy(), smpl_pos)
 
     return best_dof.cpu().numpy()
 
 if __name__ == "__main__":
-    # data = joblib.load("amass_pos.pkl")
-    data = joblib.load("gen_pos.pkl")
+    data = joblib.load("amass_pos.pkl")
+    # data = joblib.load("gen_pos.pkl")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -132,4 +132,4 @@ if __name__ == "__main__":
         start_idx += seq_len
 
     # joblib.dump(data, "amass_IK_new.pkl")
-    joblib.dump(data, "gen_IK_new.pkl")
+    # joblib.dump(data, "gen_IK_new.pkl")

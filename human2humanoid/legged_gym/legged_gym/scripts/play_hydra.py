@@ -31,7 +31,7 @@ command_state = {
 override = False
 
 EXPORT_ONNX = True
-
+import time
 
 def dict_compare(d1, d2):
     d1_keys = set(d1.keys())
@@ -99,7 +99,7 @@ def play(cfg_hydra: DictConfig) -> None:
     env_cfg.domain_rand.randomize_ctrl_delay = False
     env_cfg.domain_rand.ctrl_delay_step_range = [1, 3]
     
-    env_cfg.motion.resample_motions_for_envs_interval_s = 200
+    env_cfg.motion.resample_motions_for_envs_interval_s = 500
 
     # env_cfg.asset.termination_scales.max_ref_motion_distance = 1
 
@@ -174,7 +174,7 @@ def play(cfg_hydra: DictConfig) -> None:
         listener.start()
 
     i = 0
-
+    start_time = time.time()
     while (not NOROSPY and not rospy.is_shutdown()) or (NOROSPY):
         # for i in range(1000*int(env.max_episode_length)):
 
@@ -233,6 +233,7 @@ def play(cfg_hydra: DictConfig) -> None:
             pass
             # logger.print_rewards()
         i += 1
+        print("fps:", i/(time.time()-start_time))
 
 
 if __name__ == '__main__':

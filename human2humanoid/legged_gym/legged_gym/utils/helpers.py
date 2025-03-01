@@ -119,7 +119,6 @@ def get_load_path(root, load_run=-1, checkpoint=-1):
         model = models[-1]
     else:
         model = "model_{}.pt".format(checkpoint) 
-
     load_path = os.path.join(load_run, model)
     return load_path
 

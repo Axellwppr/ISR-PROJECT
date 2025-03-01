@@ -64,18 +64,18 @@ resample_motions_for_envs_interval_s : 10000
 visualize_config:
     customize_color : True
     marker_joint_colors : 
-    - [0.157, 0.231, 0.361] # pelvis
-    - [0.157, 0.231, 0.361] # left_hip_yaw_joint
-    - [0.157, 0.231, 0.361] # left_hip_roll_joint
-    - [0.157, 0.231, 0.361] # left_hip_pitch_joint
-    - [0.157, 0.231, 0.361] # left_knee_joint
-    - [0.157, 0.231, 0.361] # left_ankle_joint
-    - [0.157, 0.231, 0.361] # right_hip_yaw_joint
-    - [0.157, 0.231, 0.361] # right_hip_roll_joint
-    - [0.157, 0.231, 0.361] # right_hip_pitch_joint
-    - [0.157, 0.231, 0.361] # right_knee_joint
-    - [0.157, 0.231, 0.361] # right_ankle_joint
-    - [0.765, 0.298, 0.498] # torso_joint
+    - [1, 0.651, 0] # pelvis
+    - [1, 0.651, 0] # left_hip_yaw_joint
+    - [1, 0.651, 0] # left_hip_roll_joint
+    - [1, 0.651, 0] # left_hip_pitch_joint
+    - [1, 0.651, 0] # left_knee_joint
+    - [1, 0.651, 0] # left_ankle_joint
+    - [1, 0.651, 0] # right_hip_yaw_joint
+    - [1, 0.651, 0] # right_hip_roll_joint
+    - [1, 0.651, 0] # right_hip_pitch_joint
+    - [1, 0.651, 0] # right_knee_joint
+    - [1, 0.651, 0] # right_ankle_joint
+    - [1, 0.651, 0] # torso_joint
     - [1, 0.651, 0] # left_shoulder_pitch_joint
     - [1, 0.651, 0] # left_shoulder_roll_joint
     - [1, 0.651, 0] # left_shoulder_yaw_joint
